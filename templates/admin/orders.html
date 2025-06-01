@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management - Admin - Lorem ipsum</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --admin-primary: #dc3545;
+            --admin-secondary: #6c757d;
+            --admin-success: #28a745;
+            --admin-info: #17a2b8;
+            --admin-warning: #ffc107;
+            --admin-danger: #dc3545;
+            --admin-light: #f8f9fa;
+            --admin-dark: #343a40;
+            --sidebar-width: 250px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .admin-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--admin-primary), #c82333);
+            color: white;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .admin-sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav-link i {
+            width: 20px;
+            margin-right: 0.75rem;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        .admin-header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-area {
+            padding: 2rem;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .orders-table {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: var(--admin-light);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .order-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .payment-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-weight: 500;
+        }
+
+        .order-amount {
+            font-weight: bold;
+            color: var(--admin-success);
+        }
+
+        .action-buttons .btn {
+            margin: 0 2px;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .search-filters {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .order-modal .modal-dialog {
+            max-width: 900px;
+        }
+
+        .order-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .order-timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e9ecef;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -14px;
+            top: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--admin-primary);
+        }
+
+        .timeline-item.completed::before {
+            background: var(--admin-success);
+        }
+
+        .stats-cards {
+            margin-bottom: 2rem;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stats-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .admin-sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .content-area {
+                padding: 1rem;
+            }
+            
+            .page-header {
+                padding: 1rem;
+            }
+            
+            .table-header {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="admin-sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('admin_dashboard') }}" class="sidebar-brand">
+                <i class="fas fa-seedling me-2"></i>Lorem ipsum
+            </a>
+            <div class="small text-white-50">Admin Panel</div>
+        </div>
+        <ul class="sidebar-nav">
+            <li class="nav-item">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('admin_products') }}" class="nav-link">
+                    <i class="fas fa-boxes"></i>Products
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('admin_orders') }}" class="nav-link active">
+                    <i class="fas fa-shopping-cart"></i>Orders
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="fas fa-users"></i>Customers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>Analytics
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="fas fa-tags"></i>Categories
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="fas fa-percentage"></i>Promotions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="fas fa-cog"></i>Settings
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('home') }}" class="nav-link">
+                    <i class="fas fa-external-link-alt"></i>View Website
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('logout') }}" class="nav-link">
+                    <i class="fas fa-sign-out-alt"></i>Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-outline-secondary me-3" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h4 class="mb-0">Orders Management</h4>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <button class="btn btn-link dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>{{ session.admin_name }}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="mb-0"><i class="fas fa-shopping-cart me-2 text-primary"></i>Orders Management</h5>
+                        <p class="text-muted mb-0 mt-1">Track and manage customer orders</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button class="btn btn-outline-success" onclick="exportOrders()">
+                            <i class="fas fa-download me-2"></i>Export Orders
+                        </button>
+                        <button class="btn btn-outline-primary ms-2" onclick="printOrders()">
+                            <i class="fas fa-print me-2"></i>Print Labels
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-cards">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="stats-card">
+                            <div class="stats-icon bg-primary text-white">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <h4 class="text-primary mb-1">156</h4>
+                            <p class="text-muted mb-0">Total Orders</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="stats-card">
+                            <div class="stats-icon bg-warning text-white">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <h4 class="text-warning mb-1">23</h4>
+                            <p class="text-muted mb-0">Pending Orders</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="stats-card">
+                            <div class="stats-icon bg-info text-white">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <h4 class="text-info mb-1">45</h4>
+                            <p class="text-muted mb-0">Shipped Orders</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="stats-card">
+                            <div class="stats-icon bg-success text-white">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h4 class="text-success mb-1">88</h4>
+                            <p class="text-muted mb-0">Delivered Orders</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="search-filters">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" placeholder="Search orders..." id="searchInput">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="paymentFilter">
+                            <option value="">Payment Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                            <option value="refunded">Refunded</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" class="form-control" id="dateFilter">
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="amountFilter">
+                            <option value="">Amount Range</option>
+                            <option value="0-500">₹0 - ₹500</option>
+                            <option value="500-1000">₹500 - ₹1000</option>
+                            <option value="1000-2000">₹1000 - ₹2000</option>
+                            <option value="2000+">₹2000+</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="orders-table">
+                <div class="table-header">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h6 class="mb-0">Orders ({{ orders|length }} items)</h6>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="bulkUpdateStatus()">
+                                    <i class="fas fa-edit"></i> Bulk Update
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="bulkPrint()">
+                                    <i class="fas fa-print"></i> Print Selected
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="ordersTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-check-input" id="selectAll">
+                                </th>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Amount</th>
+                                <th>Payment</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="form-check-input order-checkbox" value="{{ order.order_id }}">
+                                </td>
+                                <td>
+                                    <strong class="text-primary">#{{ order.order_number }}</strong>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ order.first_name }} {{ order.last_name }}</strong>
+                                        <br><small class="text-muted">{{ order.email }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ order.item_count or 'N/A' }} items</span>
+                                </td>
+                                <td>
+                                    <span class="order-amount">₹{{ order.total_amount }}</span>
+                                </td>
+                                <td>
+                                    <span class="payment-status badge {{ 'bg-success' if order.payment_status == 'completed' else 'bg-warning' if order.payment_status == 'pending' else 'bg-danger' }}">
+                                        {{ order.payment_status.title() }}
+                                    </span>
+                                    <br><small class="text-muted">{{ order.payment_method.upper() }}</small>
+                                </td>
+                                <td>
+                                    <select class="form-select form-select-sm order-status-select" 
+                                            onchange="updateOrderStatus('{{ order.order_id }}', this.value)">
+                                        <option value="pending" {{ 'selected' if order.status == 'pending' }}>Pending</option>
+                                        <option value="confirmed" {{ 'selected' if order.status == 'confirmed' }}>Confirmed</option>
+                                        <option value="processing" {{ 'selected' if order.status == 'processing' }}>Processing</option>
+                                        <option value="shipped" {{ 'selected' if order.status == 'shipped' }}>Shipped</option>
+                                        <option value="delivered" {{ 'selected' if order.status == 'delivered' }}>Delivered</option>
+                                        <option value="cancelled" {{ 'selected' if order.status == 'cancelled' }}>Cancelled</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ order.created_at.strftime('%b %d, %Y') if order.created_at else 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewOrder('{{ order.order_id }}')" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success" onclick="printInvoice('{{ order.order_id }}')" title="Print Invoice">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-info" onclick="trackOrder('{{ order.order_id }}')" title="Track Order">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="d-flex justify-content-between align-items-center p-3">
+                    <div>
+                        <small class="text-muted">Showing 1 to {{ orders|length }} of {{ orders|length }} entries</small>
+                    </div>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Previous</a>
+                            </li>
+                            <li class="page-item active">
+                                <a class="page-link" href="#">1</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">2</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">3</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal fade order-modal" id="orderModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Order Details - #ORD-001</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <!-- Order Items -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Order Items</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Product</th>
+                                                    <th>Quantity</th>
+                                                    <th>Price</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Premium Almonds</td>
+                                                    <td>2</td>
+                                                    <td>₹799</td>
+                                                    <td>₹1,598</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Roasted Cashews</td>
+                                                    <td>1</td>
+                                                    <td>₹1,199</td>
+                                                    <td>₹1,199</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Order Timeline -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Order Timeline</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="order-timeline">
+                                        <div class="timeline-item completed">
+                                            <strong>Order Placed</strong>
+                                            <br><small class="text-muted">Dec 15, 2024 at 10:30 AM</small>
+                                        </div>
+                                        <div class="timeline-item completed">
+                                            <strong>Payment Confirmed</strong>
+                                            <br><small class="text-muted">Dec 15, 2024 at 10:35 AM</small>
+                                        </div>
+                                        <div class="timeline-item completed">
+                                            <strong>Order Processing</strong>
+                                            <br><small class="text-muted">Dec 15, 2024 at 2:00 PM</small>
+                                        </div>
+                                        <div class="timeline-item">
+                                            <strong>Shipped</strong>
+                                            <br><small class="text-muted">Pending</small>
+                                        </div>
+                                        <div class="timeline-item">
+                                            <strong>Delivered</strong>
+                                            <br><small class="text-muted">Pending</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <!-- Customer Info -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Customer Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-1"><strong>John Doe</strong></p>
+                                    <p class="mb-1">john.doe@email.com</p>
+                                    <p class="mb-0">+91 98765 43210</p>
+                                </div>
+                            </div>
+
+                            <!-- Shipping Address -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Shipping Address</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-0">
+                                        123 Main Street<br>
+                                        Apartment 4B<br>
+                                        Mumbai, Maharashtra<br>
+                                        400001, India
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Order Summary -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Order Summary</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <span>₹2,797</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Shipping:</span>
+                                        <span class="text-success">FREE</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Tax (GST):</span>
+                                        <span>₹140</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Total:</strong>
+                                        <strong class="text-success">₹2,937</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="printInvoice()">Print Invoice</button>
+                    <button type="button" class="btn btn-success" onclick="updateStatus()">Update Status</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('show');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+            }
+        });
+
+        // Search and filter functionality
+        document.getElementById('searchInput').addEventListener('input', filterOrders);
+        document.getElementById('statusFilter').addEventListener('change', filterOrders);
+        document.getElementById('paymentFilter').addEventListener('change', filterOrders);
+        document.getElementById('dateFilter').addEventListener('change', filterOrders);
+        document.getElementById('amountFilter').addEventListener('change', filterOrders);
+
+        function filterOrders() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const paymentFilter = document.getElementById('paymentFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            const amountFilter = document.getElementById('amountFilter').value;
+            
+            const rows = document.querySelectorAll('#ordersTable tbody tr');
+            
+            rows.forEach(row => {
+                let showRow = true;
+                
+                // Search filter
+                if (searchTerm) {
+                    const orderText = row.textContent.toLowerCase();
+                    if (!orderText.includes(searchTerm)) {
+                        showRow = false;
+                    }
+                }
+                
+                // Status filter
+                if (statusFilter) {
+                    const status = row.querySelector('.order-status-select').value;
+                    if (status !== statusFilter) {
+                        showRow = false;
+                    }
+                }
+                
+                // Payment filter
+                if (paymentFilter) {
+                    const paymentStatus = row.querySelector('.payment-status').textContent.toLowerCase();
+                    if (!paymentStatus.includes(paymentFilter)) {
+                        showRow = false;
+                    }
+                }
+                
+                // Amount filter
+                if (amountFilter) {
+                    const amount = parseFloat(row.querySelector('.order-amount').textContent.replace('₹', '').replace(',', ''));
+                    let inRange = false;
+                    
+                    switch(amountFilter) {
+                        case '0-500':
+                            inRange = amount >= 0 && amount <= 500;
+                            break;
+                        case '500-1000':
+                            inRange = amount > 500 && amount <= 1000;
+                            break;
+                        case '1000-2000':
+                            inRange = amount > 1000 && amount <= 2000;
+                            break;
+                        case '2000+':
+                            inRange = amount > 2000;
+                            break;
+                    }
+                    
+                    if (!inRange) {
+                        showRow = false;
+                    }
+                }
+                
+                row.style.display = showRow ? '' : 'none';
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('paymentFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('amountFilter').value = '';
+            filterOrders();
+        }
+
+        // Select all functionality
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.order-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        // Order actions
+        function viewOrder(orderId) {
+            const modal = new bootstrap.Modal(document.getElementById('orderModal'));
+            modal.show();
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            if (confirm(`Are you sure you want to change the order status to "${newStatus}"?`)) {
+                // Implement status update functionality
+                alert(`Order ${orderId} status updated to ${newStatus}`);
+            }
+        }
+
+        function printInvoice(orderId) {
+            // Implement print functionality
+            window.print();
+        }
+
+        function trackOrder(orderId) {
+            alert(`Tracking information for order ${orderId} would be displayed here`);
+        }
+
+        function exportOrders() {
+            alert('Exporting orders to CSV...');
+        }
+
+        function printOrders() {
+            alert('Printing selected orders...');
+        }
+
+        function bulkUpdateStatus() {
+            const selectedOrders = Array.from(document.querySelectorAll('.order-checkbox:checked'))
+                .map(cb => cb.value);
+            
+            if (selectedOrders.length === 0) {
+                alert('Please select orders to update');
+                return;
+            }
+            
+            const newStatus = prompt('Enter new status (pending, confirmed, processing, shipped, delivered, cancelled):');
+            if (newStatus) {
+                alert(`${selectedOrders.length} orders updated to ${newStatus}`);
+            }
+        }
+
+        function bulkPrint() {
+            const selectedOrders = Array.from(document.querySelectorAll('.order-checkbox:checked'))
+                .map(cb => cb.value);
+            
+            if (selectedOrders.length === 0) {
+                alert('Please select orders to print');
+                return;
+            }
+            
+            alert(`Printing ${selectedOrders.length} order labels...`);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,651 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.product_name }} - Lorem ipsum{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('home') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('products') }}">Products</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('products', category=product.category_id) }}">{{ product.category_name }}</a></li>
+            <li class="breadcrumb-item active">{{ product.product_name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-lg-6 mb-4">
+            <div class="product-images">
+                <!-- Main Image -->
+                <div class="main-image mb-3">
+                    <img id="mainImg" 
+                         src="{{ images[0].image_url if images else 'https://images.unsplash.com/photo-1508747703725-719777637510?w=600&h=600&fit=crop&crop=center' }}" 
+                         alt="{{ product.product_name }}" 
+                         class="img-fluid rounded-3 w-100 main-product-image">
+                    
+                    <!-- Discount Badge -->
+                    {% if product.discount_price %}
+                    <span class="badge bg-danger position-absolute top-0 end-0 m-3 fs-6">
+                        {{ ((product.price - product.discount_price) / product.price * 100) | round | int }}% OFF
+                    </span>
+                    {% endif %}
+
+                    <!-- Wishlist Button -->
+                    <button class="btn btn-light position-absolute top-0 start-0 m-3 rounded-circle wishlist-btn" 
+                            onclick="toggleWishlist({{ product.product_id }})">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+                
+                <!-- Thumbnail Images -->
+                {% if images|length > 1 %}
+                <div class="row g-2">
+                    {% for img in images %}
+                    <div class="col-3">
+                        <img src="{{ img.image_url }}" 
+                             alt="{{ img.alt_text or product.product_name }}" 
+                             class="img-fluid rounded-2 thumbnail-image {{ 'active' if loop.first else '' }}"
+                             onclick="changeMainImage(this.src)">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-lg-6">
+            <div class="product-details">
+                <!-- Product Name and Category -->
+                <div class="mb-3">
+                    <span class="badge bg-light text-dark mb-2">{{ product.category_name }}</span>
+                    <h1 class="fw-bold">{{ product.product_name }}</h1>
+                </div>
+
+                <!-- Rating and Reviews -->
+                <div class="mb-3">
+                    {% if reviews %}
+                    <div class="d-flex align-items-center">
+                        <div class="text-warning me-2">
+                            {% set avg_rating = reviews|map(attribute='rating')|sum / reviews|length %}
+                            {% for i in range(5) %}
+                                {% if i < avg_rating %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span class="fw-bold me-2">{{ "%.1f"|format(avg_rating) }}</span>
+                        <span class="text-muted">({{ reviews|length }} reviews)</span>
+                        <a href="#reviews" class="ms-3 text-decoration-none">View all reviews</a>
+                    </div>
+                    {% else %}
+                    <div class="text-muted">
+                        <i class="far fa-star me-1"></i>No reviews yet - Be the first to review!
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Price -->
+                <div class="price-section mb-4">
+                    {% if product.discount_price %}
+                        <div class="d-flex align-items-center">
+                            <span class="display-6 fw-bold text-success me-3">₹{{ product.discount_price }}</span>
+                            <span class="h4 text-muted text-decoration-line-through">₹{{ product.price }}</span>
+                        </div>
+                        <small class="text-success">You save ₹{{ product.price - product.discount_price }}!</small>
+                    {% else %}
+                        <span class="display-6 fw-bold text-success">₹{{ product.price }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Product Variants -->
+                {% if variants %}
+                <div class="variants-section mb-4">
+                    <h6 class="fw-bold">Available Options:</h6>
+                    <div class="row g-2">
+                        {% for v in variants %}
+                        <div class="col-auto">
+                            <input type="radio" class="btn-check" name="variant" id="variant{{ v.variant_id }}" 
+                                   value="{{ v.variant_id }}" {% if loop.first %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="variant{{ v.variant_id }}">
+                                {{ v.variant_value }}
+                                {% if v.price_adjustment != 0 %}
+                                    <small>(+₹{{ v.price_adjustment }})</small>
+                                {% endif %}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Quantity Selector -->
+                <div class="quantity-section mb-4">
+                    <h6 class="fw-bold">Quantity:</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="input-group" style="width: 150px;">
+                            <button class="btn btn-outline-secondary" type="button" onclick="decreaseQty()">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input type="number" class="form-control text-center" id="qty" value="1" min="1" max="10">
+                            <button class="btn btn-outline-secondary" type="button" onclick="increaseQty()">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted ms-3">
+                            <i class="fas fa-check-circle text-success me-1"></i>In Stock
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Add to Cart Section -->
+                <div class="actions-section mb-4">
+                    <div class="row g-2">
+                        <div class="col-md-8">
+                            <button class="btn btn-primary btn-lg w-100" onclick="addToCart()">
+                                <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-success btn-lg w-100">
+                                <i class="fas fa-bolt me-2"></i>Buy Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features -->
+                <div class="features-section mb-4">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <i class="fas fa-shipping-fast text-success mb-2 fs-4"></i>
+                            <p class="small mb-0">Free Delivery</p>
+                            <small class="text-muted">On orders above ₹500</small>
+                        </div>
+                        <div class="col-4">
+                            <i class="fas fa-undo text-success mb-2 fs-4"></i>
+                            <p class="small mb-0">Easy Returns</p>
+                            <small class="text-muted">7-day return policy</small>
+                        </div>
+                        <div class="col-4">
+                            <i class="fas fa-leaf text-success mb-2 fs-4"></i>
+                            <p class="small mb-0">100% Natural</p>
+                            <small class="text-muted">No preservatives</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Share Product -->
+                <div class="share-section">
+                    <h6 class="fw-bold">Share this product:</h6>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="shareProduct('facebook')">
+                            <i class="fab fa-facebook-f"></i>
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" onclick="shareProduct('twitter')">
+                            <i class="fab fa-twitter"></i>
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="shareProduct('whatsapp')">
+                            <i class="fab fa-whatsapp"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="copyLink()">
+                            <i class="fas fa-link"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Details Tabs -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="productTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="desc-tab" data-bs-toggle="tab" data-bs-target="#desc" type="button" role="tab">
+                        Description
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="nutrition-tab" data-bs-toggle="tab" data-bs-target="#nutrition" type="button" role="tab">
+                        Nutritional Info
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">
+                        Reviews ({{ reviews|length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab">
+                        Shipping Info
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="productTabContent">
+                <!-- Description Tab -->
+                <div class="tab-pane fade show active p-4" id="desc" role="tabpanel">
+                    <h5>Product Description</h5>
+                    <p>{{ product.description }}</p>
+                    
+                    <h6 class="mt-4">Key Features:</h6>
+                    <ul>
+                        <li>Premium quality sourced directly from farms</li>
+                        <li>Rich in essential nutrients and healthy fats</li>
+                        <li>No artificial preservatives or additives</li>
+                        <li>Carefully processed to maintain freshness</li>
+                        <li>Perfect for healthy snacking and cooking</li>
+                    </ul>
+                    
+                    <h6 class="mt-4">Usage:</h6>
+                    <p>Perfect for direct consumption, adding to cereals, baking, or as ingredients in various recipes. Store in a cool, dry place for maximum freshness.</p>
+                </div>
+
+                <!-- Nutritional Info Tab -->
+                <div class="tab-pane fade p-4" id="nutrition" role="tabpanel">
+                    <h5>Nutritional Information</h5>
+                    <p class="text-muted">Per 100g serving</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-striped">
+                                <tr><td><strong>Energy</strong></td><td>576 kcal</td></tr>
+                                <tr><td><strong>Protein</strong></td><td>21.2g</td></tr>
+                                <tr><td><strong>Total Fat</strong></td><td>49.9g</td></tr>
+                                <tr><td><strong>Carbohydrates</strong></td><td>21.6g</td></tr>
+                                <tr><td><strong>Fiber</strong></td><td>12.5g</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-striped">
+                                <tr><td><strong>Calcium</strong></td><td>269mg</td></tr>
+                                <tr><td><strong>Iron</strong></td><td>3.7mg</td></tr>
+                                <tr><td><strong>Magnesium</strong></td><td>270mg</td></tr>
+                                <tr><td><strong>Vitamin E</strong></td><td>25.6mg</td></tr>
+                                <tr><td><strong>Potassium</strong></td><td>733mg</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reviews Tab -->
+                <div class="tab-pane fade p-4" id="reviews" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>Customer Reviews</h5>
+                            
+                            {% if reviews %}
+                                {% for r in reviews %}
+                                <div class="review-item border-bottom py-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">{{ r.first_name }} {{ r.last_name[0] }}.</h6>
+                                            <div class="text-warning">
+                                                {% for i in range(5) %}
+                                                    {% if i < r.rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ r.created_at.strftime('%B %d, %Y') }}</small>
+                                    </div>
+                                    {% if r.title %}
+                                    <h6>{{ r.title }}</h6>
+                                    {% endif %}
+                                    <p class="mb-0">{{ r.comment }}</p>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-star text-muted mb-3 fs-1"></i>
+                                    <h6>No reviews yet</h6>
+                                    <p class="text-muted">Be the first to review this product</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            {% if session.user_id %}
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Write a Review</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form id="reviewForm">
+                                        <div class="mb-3">
+                                            <label class="form-label">Rating</label>
+                                            <div class="rating-input">
+                                                {% for i in range(1, 6) %}
+                                                <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}">
+                                                <label for="star{{ i }}"><i class="fas fa-star"></i></label>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="reviewTitle" class="form-label">Title (Optional)</label>
+                                            <input type="text" class="form-control" id="reviewTitle" placeholder="Summary of your review">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="reviewComment" class="form-label">Review</label>
+                                            <textarea class="form-control" id="reviewComment" rows="4" placeholder="Share your experience with this product"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100">Submit Review</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6>Want to review this product?</h6>
+                                    <p class="text-muted">Please login to write a review</p>
+                                    <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Info Tab -->
+                <div class="tab-pane fade p-4" id="shipping" role="tabpanel">
+                    <h5>Shipping Information</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Delivery Options</h6>
+                            <ul>
+                                <li><strong>Standard Delivery:</strong> 3-5 business days</li>
+                                <li><strong>Express Delivery:</strong> 1-2 business days (₹50 extra)</li>
+                                <li><strong>Free Delivery:</strong> On orders above ₹500</li>
+                            </ul>
+                            
+                            <h6 class="mt-4">Payment Options</h6>
+                            <ul>
+                                <li>Cash on Delivery (COD)</li>
+                                <li>Credit/Debit Cards</li>
+                                <li>Net Banking</li>
+                                <li>UPI Payments</li>
+                                <li>Wallet Payments</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Return Policy</h6>
+                            <ul>
+                                <li>7-day return policy for unopened products</li>
+                                <li>Free returns for defective items</li>
+                                <li>Return shipping charges may apply</li>
+                                <li>Refund processed within 3-5 business days</li>
+                            </ul>
+                            
+                            <div class="card bg-light mt-4">
+                                <div class="card-body">
+                                    <h6><i class="fas fa-info-circle text-primary me-2"></i>Need Help?</h6>
+                                    <p class="mb-0">Contact our customer support for any queries</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-phone me-1"></i>+91 98765 43210<br>
+                                        <i class="fas fa-envelope me-1"></i>support@Lorem ipsum.com
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="mb-4">You May Also Like</h4>
+            <!-- Related products would be loaded here -->
+            <div class="text-center text-muted py-4">
+                <p>Related products will be displayed here</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .main-product-image {
+        height: 500px;
+        object-fit: cover;
+        position: relative;
+    }
+    
+    .thumbnail-image {
+        height: 80px;
+        object-fit: cover;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .thumbnail-image:hover,
+    .thumbnail-image.active {
+        opacity: 1;
+        border-color: var(--primary-color);
+    }
+    
+    .wishlist-btn {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .wishlist-btn.active i {
+        color: #dc3545;
+    }
+    
+    .rating-input {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+    
+    .rating-input input {
+        display: none;
+    }
+    
+    .rating-input label {
+        cursor: pointer;
+        color: #ddd;
+        font-size: 1.2rem;
+        padding: 0 2px;
+    }
+    
+    .rating-input label:hover,
+    .rating-input label:hover ~ label,
+    .rating-input input:checked ~ label {
+        color: #ffc107;
+    }
+    
+    .review-item:last-child {
+        border-bottom: none !important;
+    }
+    
+    @media (max-width: 768px) {
+        .main-product-image {
+            height: 300px;
+        }
+        
+        .thumbnail-image {
+            height: 60px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Change main image
+    function changeMainImage(src) {
+        document.getElementById('mainImg').src = src;
+        
+        // Update active thumbnail
+        document.querySelectorAll('.thumbnail-image').forEach(img => {
+            img.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+
+    // Quantity controls
+    function increaseQty() {
+        const input = document.getElementById('qty');
+        const currentValue = parseInt(input.value);
+        if (currentValue < parseInt(input.max)) {
+            input.value = currentValue + 1;
+        }
+    }
+
+    function decreaseQty() {
+        const input = document.getElementById('qty');
+        const currentValue = parseInt(input.value);
+        if (currentValue > parseInt(input.min)) {
+            input.value = currentValue - 1;
+        }
+    }
+
+    // Add to cart with details
+    function addToCart() {
+        if (!isLoggedIn()) {
+            alert('Please login to add items to cart');
+            window.location.href = '/login';
+            return;
+        }
+
+        const qty = parseInt(document.getElementById('qty').value);
+        const selectedVariant = document.querySelector('input[name="variant"]:checked');
+        const variantId = selectedVariant ? selectedVariant.value : null;
+
+        fetch('/add_to_cart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                product_id: {{ product.product_id }},
+                variant_id: variantId,
+                quantity: qty
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Item added to cart successfully!');
+                updateCartCount();
+            } else {
+                alert(data.message || 'Error adding item to cart');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error adding item to cart');
+        });
+    }
+
+    // Toggle wishlist
+    function toggleWishlist(productId) {
+        if (!isLoggedIn()) {
+            alert('Please login to add items to wishlist');
+            window.location.href = '/login';
+            return;
+        }
+
+        const btn = document.querySelector('.wishlist-btn');
+        const icon = btn.querySelector('i');
+        
+        if (icon.classList.contains('far')) {
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            btn.classList.add('active');
+            alert('Added to wishlist!');
+        } else {
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            btn.classList.remove('active');
+            alert('Removed from wishlist!');
+        }
+    }
+
+    // Share product
+    function shareProduct(platform) {
+        const url = window.location.href;
+        const title = '{{ product.product_name }} - Lorem ipsum';
+        
+        let shareUrl;
+        switch(platform) {
+            case 'facebook':
+                shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+                break;
+            case 'twitter':
+                shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
+                break;
+            case 'whatsapp':
+                shareUrl = `https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`;
+                break;
+        }
+        
+        if (shareUrl) {
+            window.open(shareUrl, '_blank', 'width=600,height=400');
+        }
+    }
+
+    // Copy product link
+    function copyLink() {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Product link copied to clipboard!');
+        });
+    }
+
+    // Review form submission
+    document.getElementById('reviewForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const rating = document.querySelector('input[name="rating"]:checked');
+        const title = document.getElementById('reviewTitle').value;
+        const comment = document.getElementById('reviewComment').value;
+        
+        if (!rating) {
+            alert('Please select a rating');
+            return;
+        }
+        
+        if (!comment.trim()) {
+            alert('Please write a review');
+            return;
+        }
+        
+        // Submit review (placeholder)
+        alert('Thank you for your review! It will be published after moderation.');
+        this.reset();
+    });
+
+    // Variant selection price update
+    document.querySelectorAll('input[name="variant"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Update price based on variant selection
+            const priceAdjustment = parseFloat(this.dataset.priceAdjustment) || 0;
+            // Update display price (implementation depends on your needs)
+        });
+    });
+
+    // Image zoom on hover (optional enhancement)
+    document.getElementById('mainImg').addEventListener('mouseover', function() {
+        this.style.transform = 'scale(1.1)';
+        this.style.transition = 'transform 0.3s ease';
+    });
+
+    document.getElementById('mainImg').addEventListener('mouseout', function() {
+        this.style.transform = 'scale(1)';
+    });
+</script>
+{% endblock %}

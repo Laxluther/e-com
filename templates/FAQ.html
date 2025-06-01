@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block title %}Frequently Asked Questions - Lorem ipsum{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h1 class="display-5 fw-bold">Frequently Asked Questions</h1>
+            <p class="lead text-muted">Find answers to common questions about our products and services</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Search FAQ -->
+        <div class="col-lg-8 mx-auto mb-4">
+            <div class="input-group input-group-lg">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control" id="faqSearch" placeholder="Search FAQ...">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- FAQ Categories Navigation -->
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Categories</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action active" data-category="all">
+                        <i class="fas fa-th-large me-2"></i>All Questions
+                    </a>
+                    {% for category_name in faq_categories.keys() %}
+                    <a href="#{{ category_name|lower|replace(' ', '-') }}" class="list-group-item list-group-item-action" data-category="{{ category_name|lower }}">
+                        {% if category_name == 'Orders' %}
+                            <i class="fas fa-shopping-cart me-2"></i>
+                        {% elif category_name == 'Shipping' or category_name == 'Delivery' %}
+                            <i class="fas fa-truck me-2"></i>
+                        {% elif category_name == 'Returns' %}
+                            <i class="fas fa-undo me-2"></i>
+                        {% elif category_name == 'Payment' %}
+                            <i class="fas fa-credit-card me-2"></i>
+                        {% elif category_name == 'Products' %}
+                            <i class="fas fa-box me-2"></i>
+                        {% else %}
+                            <i class="fas fa-question-circle me-2"></i>
+                        {% endif %}
+                        {{ category_name }} ({{ faq_categories[category_name]|length }})
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Contact Support -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-body text-center">
+                    <i class="fas fa-headset text-primary mb-3" style="font-size: 2.5rem;"></i>
+                    <h6>Still need help?</h6>
+                    <p class="text-muted small">Can't find what you're looking for?</p>
+                    <a href="{{ url_for('contact') }}" class="btn btn-primary btn-sm">Contact Support</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ Content -->
+        <div class="col-lg-9">
+            {% for category_name, faqs in faq_categories.items() %}
+            <div class="faq-category" id="{{ category_name|lower|replace(' ', '-') }}">
+                <h3 class="mb-4">
+                    {% if category_name == 'Orders' %}
+                        <i class="fas fa-shopping-cart me-2 text-primary"></i>
+                    {% elif category_name == 'Shipping' or category_name == 'Delivery' %}
+                        <i class="fas fa-truck me-2 text-primary"></i>
+                    {% elif category_name == 'Returns' %}
+                        <i class="fas fa-undo me-2 text-primary"></i>
+                    {% elif category_name == 'Payment' %}
+                        <i class="fas fa-credit-card me-2 text-primary"></i>
+                    {% elif category_name == 'Products' %}
+                        <i class="fas fa-box me-2 text-primary"></i>
+                    {% else %}
+                        <i class="fas fa-question-circle me-2 text-primary"></i>
+                    {% endif %}
+                    {{ category_name }}
+                </h3>
+
+                <div class="accordion" id="accordion{{ category_name|replace(' ', '') }}">
+                    {% for faq in faqs %}
+                    <div class="accordion-item faq-item" data-category="{{ category_name|lower }}">
+                        <h2 class="accordion-header" id="heading{{ faq.faq_id }}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#collapse{{ faq.faq_id }}" aria-expanded="false">
+                                {{ faq.question }}
+                            </button>
+                        </h2>
+                        <div id="collapse{{ faq.faq_id }}" class="accordion-collapse collapse" 
+                             data-bs-parent="#accordion{{ category_name|replace(' ', '') }}">
+                            <div class="accordion-body">
+                                {{ faq.answer|safe }}
+                                
+                                <!-- Helpful buttons -->
+                                <div class="mt-3 pt-3 border-top">
+                                    <small class="text-muted">Was this helpful?</small>
+                                    <div class="btn-group ms-2" role="group">
+                                        <button type="button" class="btn btn-outline-success btn-sm" onclick="markHelpful({{ faq.faq_id }}, true)">
+                                            <i class="fas fa-thumbs-up"></i> Yes
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="markHelpful({{ faq.faq_id }}, false)">
+                                            <i class="fas fa-thumbs-down"></i> No
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if not loop.last %}
+            <hr class="my-5">
+            {% endif %}
+            {% endfor %}
+
+            <!-- No results message -->
+            <div id="noResults" class="text-center py-5" style="display: none;">
+                <i class="fas fa-search text-muted mb-3" style="font-size: 3rem;"></i>
+                <h5>No FAQs found</h5>
+                <p class="text-muted">Try adjusting your search terms or browse all categories</p>
+                <button class="btn btn-primary" onclick="clearSearch()">Show All FAQs</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popular Questions -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card shadow-sm border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-star me-2"></i>Most Popular Questions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-shipping-fast text-primary me-3 mt-1"></i>
+                                <div>
+                                    <h6>How long does delivery take?</h6>
+                                    <p class="text-muted small mb-0">We typically deliver within 2-5 business days depending on your location.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-money-bill-wave text-success me-3 mt-1"></i>
+                                <div>
+                                    <h6>Do you accept Cash on Delivery?</h6>
+                                    <p class="text-muted small mb-0">Yes, we accept Cash on Delivery (COD) for all orders across India.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-undo text-warning me-3 mt-1"></i>
+                                <div>
+                                    <h6>What is your return policy?</h6>
+                                    <p class="text-muted small mb-0">We accept returns within 7 days of delivery for unopened products.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-leaf text-success me-3 mt-1"></i>
+                                <div>
+                                    <h6>Are your products organic?</h6>
+                                    <p class="text-muted small mb-0">Most of our products are organic and naturally sourced. Check individual product descriptions.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.accordion-button {
+    font-weight: 500;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    border-color: var(--bs-primary);
+}
+
+.list-group-item.active {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.faq-category {
+    scroll-margin-top: 100px;
+}
+
+.faq-item {
+    transition: all 0.3s ease;
+}
+
+.faq-item:hover {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.btn-group .btn {
+    font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+    .display-5 {
+        font-size: 2.5rem;
+    }
+    
+    .col-lg-3 {
+        order: 2;
+    }
+    
+    .col-lg-9 {
+        order: 1;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('faqSearch');
+    const categoryLinks = document.querySelectorAll('[data-category]');
+    const faqItems = document.querySelectorAll('.faq-item');
+    const noResults = document.getElementById('noResults');
+    const faqCategories = document.querySelectorAll('.faq-category');
+
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        filterFAQs(searchTerm);
+    });
+
+    // Category filter
+    categoryLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Update active state
+            categoryLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            const category = this.getAttribute('data-category');
+            filterByCategory(category);
+        });
+    });
+
+    function filterFAQs(searchTerm) {
+        let visibleCount = 0;
+        
+        faqItems.forEach(item => {
+            const question = item.querySelector('.accordion-button').textContent.toLowerCase();
+            const answer = item.querySelector('.accordion-body').textContent.toLowerCase();
+            
+            if (searchTerm === '' || question.includes(searchTerm) || answer.includes(searchTerm)) {
+                item.style.display = 'block';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Show/hide categories based on visible items
+        faqCategories.forEach(category => {
+            const visibleItems = category.querySelectorAll('.faq-item[style*="block"], .faq-item:not([style*="none"])');
+            if (visibleItems.length === 0 && searchTerm !== '') {
+                category.style.display = 'none';
+            } else {
+                category.style.display = 'block';
+            }
+        });
+
+        // Show no results message
+        if (visibleCount === 0 && searchTerm !== '') {
+            noResults.style.display = 'block';
+        } else {
+            noResults.style.display = 'none';
+        }
+    }
+
+    function filterByCategory(category) {
+        if (category === 'all') {
+            faqCategories.forEach(cat => cat.style.display = 'block');
+            faqItems.forEach(item => item.style.display = 'block');
+        } else {
+            faqCategories.forEach(cat => {
+                if (cat.id === category.replace(' ', '-')) {
+                    cat.style.display = 'block';
+                } else {
+                    cat.style.display = 'none';
+                }
+            });
+        }
+        noResults.style.display = 'none';
+        searchInput.value = '';
+    }
+
+    // Clear search
+    window.clearSearch = function() {
+        searchInput.value = '';
+        filterFAQs('');
+        
+        // Reset category filter
+        categoryLinks.forEach(l => l.classList.remove('active'));
+        categoryLinks[0].classList.add('active');
+    };
+
+    // Mark helpful
+    window.markHelpful = function(faqId, isHelpful) {
+        // You can implement this to track helpful ratings
+        const button = event.target.closest('button');
+        button.classList.remove('btn-outline-success', 'btn-outline-danger');
+        button.classList.add(isHelpful ? 'btn-success' : 'btn-danger');
+        button.disabled = true;
+        
+        // Show thank you message
+        setTimeout(() => {
+            showToast('Thank you for your feedback!', 'success');
+        }, 300);
+    };
+
+    // Smooth scrolling for category links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+    // Auto-open FAQ from URL hash
+    if (window.location.hash) {
+        const targetAccordion = document.querySelector(window.location.hash + ' .accordion-collapse');
+        if (targetAccordion) {
+            setTimeout(() => {
+                const button = targetAccordion.previousElementSibling.querySelector('.accordion-button');
+                button.click();
+            }, 500);
+        }
+    }
+});
+
+// Share FAQ functionality
+function shareFAQ(faqId) {
+    const url = `${window.location.origin}${window.location.pathname}#faq-${faqId}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'FAQ - Lorem ipsum',
+            url: url
+        });
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('FAQ link copied to clipboard!', 'success');
+        });
+    }
+}
+</script>
+{% endblock %}

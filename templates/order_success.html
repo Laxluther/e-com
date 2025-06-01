@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block title %}Order Successful - Lorem ipsum{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Success Message -->
+            <div class="text-center mb-5">
+                <div class="success-icon mb-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 5rem;"></i>
+                </div>
+                <h1 class="text-success mb-3">Order Placed Successfully!</h1>
+                <p class="lead text-muted">Thank you for your order. We'll send you a confirmation email shortly.</p>
+            </div>
+
+            <!-- Order Details Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-receipt me-2"></i>Order Confirmation
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Order Information</h6>
+                            <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+                            <p><strong>Order Date:</strong> {{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                            <p><strong>Total Amount:</strong> <span class="text-success fs-5 fw-bold">₹{{ order.total_amount }}</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Payment & Delivery</h6>
+                            <p><strong>Payment Method:</strong> 
+                                {% if order.payment_method == 'cod' %}
+                                    <span class="badge bg-warning">Cash on Delivery</span>
+                                {% elif order.payment_method == 'wallet' %}
+                                    <span class="badge bg-primary">Wallet</span>
+                                {% else %}
+                                    <span class="badge bg-info">{{ order.payment_method.title() }}</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Payment Status:</strong> 
+                                <span class="badge bg-{{ 'success' if order.payment_status == 'completed' else 'warning' }}">
+                                    {{ order.payment_status.title() }}
+                                </span>
+                            </p>
+                            <p><strong>Estimated Delivery:</strong> 
+                                <span class="text-primary">{{ (order.created_at + timedelta(days=3)).strftime('%B %d, %Y') }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <a href="{{ url_for('user_orders') }}" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-list me-2"></i>View All Orders
+                    </a>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <a href="{{ url_for('track_order_page') }}?order={{ order.order_number }}" class="btn btn-outline-primary btn-lg w-100">
+                        <i class="fas fa-shipping-fast me-2"></i>Track This Order
+                    </a>
+                </div>
+            </div>
+
+            <!-- What's Next Section -->
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="mb-3">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>What happens next?
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <div class="mb-2">
+                                    <i class="fas fa-envelope-open text-primary" style="font-size: 2rem;"></i>
+                                </div>
+                                <h6>Order Confirmation</h6>
+                                <p class="small text-muted">You'll receive an email confirmation with order details</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <div class="mb-2">
+                                    <i class="fas fa-box text-warning" style="font-size: 2rem;"></i>
+                                </div>
+                                <h6>Order Processing</h6>
+                                <p class="small text-muted">We'll prepare your order with care and quality checks</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <div class="mb-2">
+                                    <i class="fas fa-truck text-success" style="font-size: 2rem;"></i>
+                                </div>
+                                <h6>Fast Delivery</h6>
+                                <p class="small text-muted">Your order will be delivered within 3-5 business days</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Special Offers -->
+            <div class="card mt-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-gift me-2"></i>Special Offers Just for You!
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-users text-primary me-3 fs-4"></i>
+                                <div>
+                                    <h6 class="mb-1">Refer Friends</h6>
+                                    <p class="mb-0 small text-muted">Earn ₹50 for each friend you refer</p>
+                                    <a href="{{ url_for('referrals') }}" class="btn btn-sm btn-outline-primary mt-1">Start Referring</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-star text-warning me-3 fs-4"></i>
+                                <div>
+                                    <h6 class="mb-1">Rate Your Purchase</h6>
+                                    <p class="mb-0 small text-muted">Share your experience and help others</p>
+                                    <button class="btn btn-sm btn-outline-warning mt-1" onclick="showRatingModal()">Rate Products</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Continue Shopping -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('products') }}" class="btn btn-success btn-lg">
+                    <i class="fas fa-shopping-bag me-2"></i>Continue Shopping
+                </a>
+            </div>
+
+            <!-- Contact Support -->
+            <div class="text-center mt-4">
+                <p class="text-muted">
+                    Need help with your order? 
+                    <a href="#" class="text-decoration-none">Contact Support</a> or call 
+                    <a href="tel:+919876543210" class="text-decoration-none">+91 98765 43210</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rating Modal -->
+<div class="modal fade" id="ratingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rate Your Experience</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <h6>How was your shopping experience?</h6>
+                    <div class="rating-stars" id="overallRating">
+                        <i class="far fa-star" data-rating="1"></i>
+                        <i class="far fa-star" data-rating="2"></i>
+                        <i class="far fa-star" data-rating="3"></i>
+                        <i class="far fa-star" data-rating="4"></i>
+                        <i class="far fa-star" data-rating="5"></i>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="reviewComment" class="form-label">Your Review (Optional)</label>
+                    <textarea class="form-control" id="reviewComment" rows="3" 
+                              placeholder="Tell us about your experience..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Maybe Later</button>
+                <button type="button" class="btn btn-primary" onclick="submitRating()">Submit Rating</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add this to display order details -->
+<div class="order-summary mt-4">
+    <h6>Order Summary</h6>
+    <p><strong>Payment Method:</strong> 
+        {% if order.payment_method == 'cod' %}
+            Cash on Delivery
+        {% elif order.payment_method == 'wallet' %}
+            Wallet Payment
+        {% else %}
+            Online Payment
+        {% endif %}
+    </p>
+    
+    {% if order.payment_method == 'cod' %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Cash on Delivery:</strong> Please keep exact change ready. Our delivery partner will collect ₹{{ order.total_amount }} at the time of delivery.
+    </div>
+    {% endif %}
+</div>
+<style>
+.success-icon {
+    animation: successPulse 2s ease-in-out;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.rating-stars {
+    font-size: 2rem;
+    color: #ffc107;
+    cursor: pointer;
+}
+
+.rating-stars i {
+    margin: 0 5px;
+    transition: all 0.3s ease;
+}
+
+.rating-stars i:hover,
+.rating-stars i.selected {
+    color: #ff9800;
+    transform: scale(1.2);
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+    .success-icon i {
+        font-size: 3.5rem !important;
+    }
+    
+    .lead {
+        font-size: 1rem;
+    }
+}
+</style>
+
+<script>
+function showRatingModal() {
+    const modal = new bootstrap.Modal(document.getElementById('ratingModal'));
+    modal.show();
+}
+
+// Rating stars functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('#overallRating i');
+    let selectedRating = 0;
+    
+    stars.forEach(star => {
+        star.addEventListener('mouseover', function() {
+            const rating = parseInt(this.getAttribute('data-rating'));
+            highlightStars(rating);
+        });
+        
+        star.addEventListener('click', function() {
+            selectedRating = parseInt(this.getAttribute('data-rating'));
+            highlightStars(selectedRating);
+            // Make stars persistent
+            stars.forEach(s => s.classList.add('selected'));
+        });
+    });
+    
+    document.getElementById('overallRating').addEventListener('mouseleave', function() {
+        if (selectedRating > 0) {
+            highlightStars(selectedRating);
+        } else {
+            resetStars();
+        }
+    });
+    
+    function highlightStars(rating) {
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.remove('far');
+                star.classList.add('fas');
+            } else {
+                star.classList.remove('fas');
+                star.classList.add('far');
+            }
+        });
+    }
+    
+    function resetStars() {
+        stars.forEach(star => {
+            star.classList.remove('fas');
+            star.classList.add('far');
+        });
+    }
+    
+    window.submitRating = function() {
+        if (selectedRating === 0) {
+            alert('Please select a rating');
+            return;
+        }
+        
+        const comment = document.getElementById('reviewComment').value;
+        
+        // Submit rating (you can implement the API call here)
+        alert(`Thank you for your ${selectedRating}-star rating!`);
+        
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('ratingModal')).hide();
+        
+        // Reset form
+        selectedRating = 0;
+        resetStars();
+        document.getElementById('reviewComment').value = '';
+    };
+});
+
+// Auto-scroll to top on page load
+window.addEventListener('load', function() {
+    window.scrollTo(0, 0);
+});
+
+// Celebrate with confetti effect (optional enhancement)
+function showConfetti() {
+    // Simple confetti effect - you can use a library like canvas-confetti for better effect
+    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7'];
+    
+    for (let i = 0; i < 50; i++) {
+        setTimeout(() => {
+            const confetti = document.createElement('div');
+            confetti.style.cssText = `
+                position: fixed;
+                top: -10px;
+                left: ${Math.random() * 100}%;
+                width: 10px;
+                height: 10px;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                border-radius: 50%;
+                z-index: 9999;
+                pointer-events: none;
+                animation: confettiFall 3s linear forwards;
+            `;
+            
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => {
+                confetti.remove();
+            }, 3000);
+        }, i * 50);
+    }
+}
+
+// Add confetti CSS animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes confettiFall {
+        to {
+            transform: translateY(100vh) rotate(720deg);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Show confetti on page load
+setTimeout(showConfetti, 500);
+</script>
+{% endblock %}

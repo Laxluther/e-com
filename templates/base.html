@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Premium Nuts & Seeds Store{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #202b23;
+            --secondary-color: #6c757d;
+            --accent-color: #ffc107;
+            --text-dark: #343a40;
+            --bg-light: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #552623);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            color: white !important;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--accent-color) !important;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .cart-badge {
+            background-color: var(--accent-color);
+            color: var(--text-dark);
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .search-box {
+            border-radius: 25px;
+            border: 2px solid white;
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .search-box::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .search-box:focus {
+            background: white;
+            color: var(--text-dark);
+            box-shadow: none;
+            border-color: white;
+        }
+
+        .footer {
+            background-color: var(--text-dark);
+            color: white;
+            padding: 40px 0 20px;
+            margin-top: 50px;
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                text-align: center;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                <i class="fas fa-seedling me-2"></i>Lorem ipsum
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('products') }}">Products</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Categories
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('products', category=1) }}">Nuts</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('products', category=2) }}">Seeds</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('products', category=3) }}">Coffee</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('products', category=4) }}">Honey</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <!-- Search Bar -->
+                <form class="d-flex me-3" method="GET" action="{{ url_for('products') }}">
+                    <input class="form-control search-box" type="search" name="search" placeholder="Search products..." aria-label="Search">
+                    <button class="btn btn-outline-light ms-2" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+                
+                <!-- User Menu -->
+                <ul class="navbar-nav">
+                    {% if session.user_id %}
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="{{ url_for('cart') }}">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span class="cart-badge" id="cart-count">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i>{{ session.user_name }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('profile') }}">
+                                    <i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('user_orders') }}">
+                                    <i class="fas fa-shopping-bag me-2"></i>Orders</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('wishlist') }}">
+                                    <i class="fas fa-heart me-2"></i>Wishlist</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('wallet') }}">
+                                    <i class="fas fa-wallet me-2"></i>Wallet</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('referrals') }}">
+                                    <i class="fas fa-users me-2"></i>Referrals</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('promocodes') }}">
+                                    <i class="fas fa-tags me-2"></i>Promocodes</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5><i class="fas fa-seedling me-2"></i>Lorem ipsum</h5>
+                    <p>Premium quality nuts, seeds, coffee, and honey delivered fresh to your doorstep across India.</p>
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <h6>Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('home') }}" class="text-white-50">Home</a></li>
+                        <li><a href="{{ url_for('products') }}" class="text-white-50">Products</a></li>
+                        <li><a href="#" class="text-white-50">About Us</a></li>
+                        <li><a href="#" class="text-white-50">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <h6>Categories</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('products', category=1) }}" class="text-white-50">Nuts</a></li>
+                        <li><a href="{{ url_for('products', category=2) }}" class="text-white-50">Seeds</a></li>
+                        <li><a href="{{ url_for('products', category=3) }}" class="text-white-50">Coffee</a></li>
+                        <li><a href="{{ url_for('products', category=4) }}" class="text-white-50">Honey</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <h6>Customer Care</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white-50">FAQ</a></li>
+                        <li><a href="#" class="text-white-50">Shipping Info</a></li>
+                        <li><a href="#" class="text-white-50">Returns</a></li>
+                        <li><a href="#" class="text-white-50">Track Order</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <h6>Contact Info</h6>
+                    <p class="text-white-50 small">
+                        <i class="fas fa-phone me-2"></i>+91 98765 43210<br>
+                        <i class="fas fa-envelope me-2"></i>info@Lorem ipsum.com<br>
+                        <i class="fas fa-map-marker-alt me-2"></i>Mumbai, India
+                    </p>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="text-white-50 small mb-0">&copy; 2025 Lorem ipsum. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="text-white-50 small mb-0">Privacy Policy | Terms & Conditions</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Check if user is logged in
+        function isLoggedIn() {
+            return {{ 'true' if session.user_id else 'false' }};
+        }
+
+        // Add to cart function (improved)
+        function addToCart(productId, variantId = null, quantity = 1) {
+            if (!isLoggedIn()) {
+                alert('Please login to add items to cart');
+                window.location.href = '/login';
+                return;
+            }
+
+            // Show loading state
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+            btn.disabled = true;
+
+            fetch('/add_to_cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    variant_id: variantId,
+                    quantity: quantity
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showToast('Item added to cart!', 'success');
+                    updateCartCount();
+                } else {
+                    showToast(data.message || 'Error adding item to cart', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error adding item to cart', 'error');
+            })
+            .finally(() => {
+                // Restore button state
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+
+        // Update cart count (improved)
+        function updateCartCount() {
+            if (!isLoggedIn()) {
+                document.getElementById('cart-count').textContent = '0';
+                return;
+            }
+
+            fetch('/api/cart/count')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const cartCount = data.count || 0;
+                    const cartBadge = document.getElementById('cart-count');
+                    cartBadge.textContent = cartCount;
+                    
+                    // Hide badge if count is 0
+                    if (cartCount === 0) {
+                        cartBadge.style.display = 'none';
+                    } else {
+                        cartBadge.style.display = 'inline-block';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error updating cart count:', error);
+            });
+        }
+
+        // Show toast notifications
+        function showToast(message, type = 'info') {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            toast.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 3000);
+        }
+
+        // Remove from cart
+        function removeFromCart(cartId) {
+            if (!confirm('Remove this item from cart?')) return;
+
+            fetch('/api/cart/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ cart_id: cartId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Item removed from cart', 'success');
+                    location.reload(); // Refresh cart page
+                } else {
+                    showToast(data.message || 'Error removing item', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error removing item', 'error');
+            });
+        }
+
+        // Update cart quantity
+        function updateCartQuantity(cartId, newQuantity) {
+            if (newQuantity < 1) {
+                removeFromCart(cartId);
+                return;
+            }
+
+            fetch('/api/cart/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    cart_id: cartId, 
+                    quantity: newQuantity 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Refresh cart page
+                } else {
+                    showToast(data.message || 'Error updating cart', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error updating cart', 'error');
+            });
+        }
+
+        // Load cart count on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCartCount();
+            
+            // Update cart count every 30 seconds
+            setInterval(updateCartCount, 30000);
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Add wishlist functionality
+        function addToWishlist(productId) {
+            if (!isLoggedIn()) {
+                alert('Please login to add items to wishlist');
+                window.location.href = '/login';
+                return;
+            }
+
+            fetch('/wishlist/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ product_id: productId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Added to wishlist!', 'success');
+                    // Update heart icon
+                    const heartIcon = event.target.closest('button').querySelector('i');
+                    heartIcon.classList.remove('far');
+                    heartIcon.classList.add('fas');
+                    heartIcon.style.color = '#dc3545';
+                } else {
+                    showToast(data.message || 'Error adding to wishlist', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error adding to wishlist', 'error');
+            });
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

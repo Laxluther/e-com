@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart - Lorem ipsum{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1><i class="fas fa-shopping-cart me-2 text-primary"></i>Your Shopping Cart</h1>
+    
+    {% if cart_items %}
+    <div class="row">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">Items in Cart ({{ cart_items|length }})</h6>
+                </div>
+                <div class="card-body p-0">
+                    {% for item in cart_items %}
+                    <div class="cart-item row align-items-center p-3 border-bottom" data-cart-id="{{ item.cart_id }}">
+                        <!-- Product Image -->
+                        <div class="col-md-2 col-sm-3">
+                            <img src="{{ item.image_url or 'https://via.placeholder.com/150x150' }}" 
+                                 alt="{{ item.product_name }}" 
+                                 class="img-fluid rounded" style="height: 80px; width: 80px; object-fit: cover;">
+                        </div>
+                        
+                        <!-- Product Details -->
+                        <div class="col-md-4 col-sm-5">
+                            <h6 class="fw-bold mb-1">{{ item.product_name }}</h6>
+                            <div class="price-info">
+                                {% if item.discount_price %}
+                                    <span class="fw-bold text-success">₹{{ item.discount_price }}</span>
+                                    <span class="text-muted text-decoration-line-through ms-1">₹{{ item.price }}</span>
+                                {% else %}
+                                    <span class="fw-bold text-success">₹{{ item.price }}</span>
+                                {% endif %}
+                            </div>
+                            {% if item.variant_name %}
+                            <small class="text-muted">Variant: {{ item.variant_name }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Quantity Controls -->
+                        <div class="col-md-3 col-sm-2">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="updateQuantity({{ item.cart_id }}, {{ item.quantity - 1 }})">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <span class="mx-3 quantity-display">{{ item.quantity }}</span>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="updateQuantity({{ item.cart_id }}, {{ item.quantity + 1 }})">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Item Total & Actions -->
+                        <div class="col-md-3 col-sm-2 text-end">
+                            <div class="item-total mb-2">
+                                <span class="fw-bold fs-5 text-primary item-total-amount">
+                                    ₹{{ ((item.discount_price or item.price) * item.quantity)|round(2) }}
+                                </span>
+                            </div>
+                            <button class="btn btn-link text-danger p-0" onclick="removeFromCart({{ item.cart_id }})">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Continue Shopping -->
+            <div class="mt-3">
+                <a href="{{ url_for('products') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                </a>
+                <button class="btn btn-outline-danger ms-2" onclick="clearCart()">
+                    <i class="fas fa-trash me-2"></i>Clear Cart
+                </button>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="fas fa-receipt me-2"></i>Order Summary</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Order Breakdown -->
+                    <div class="order-breakdown">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal (<span id="item-count">{{ cart_items|length }}</span> items)</span>
+                            <span id="subtotal-amount">₹{{ total }}</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shipping</span>
+                            <span class="text-success" id="shipping-amount">
+                                {% if total >= 500 %}
+                                    FREE
+                                {% else %}
+                                    ₹50
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax (GST 5%)</span>
+                            <span id="tax-amount">₹{{ (total * 0.05)|round(2) }}</span>
+                        </div>
+                        
+                        {% if total_savings > 0 %}
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>You Save</span>
+                            <span>₹{{ total_savings }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="fw-bold fs-5">Total</span>
+                            <span class="fw-bold fs-5 text-primary" id="total-amount">
+                                ₹{{ (total + (50 if total < 500 else 0) + (total * 0.05))|round(2) }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Free Shipping Progress -->
+                    {% if total < 500 %}
+                    <div class="free-shipping-progress mb-3" id="shipping-progress">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Add ₹<span id="remaining-for-free-shipping">{{ 500 - total }}</span> more for FREE shipping</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: {{ (total/500)*100 }}%" id="shipping-progress-bar"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Promo Code -->
+                    <div class="promo-code-section mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Promo code" id="promoCodeInput">
+                            <button class="btn btn-outline-secondary" type="button" onclick="applyPromoCode()">Apply</button>
+                        </div>
+                        <div id="promoCodeMessage" class="mt-2"></div>
+                    </div>
+
+                    <!-- Checkout Buttons -->
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
+                        </a>
+                        <button class="btn btn-success btn-lg" onclick="quickCheckout()">
+                            <i class="fas fa-bolt me-2"></i>Quick Buy
+                        </button>
+                    </div>
+                    
+                    <!-- Security & Delivery Info -->
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between text-center">
+                            <div class="flex-fill">
+                                <i class="fas fa-shield-alt text-success"></i>
+                                <br><small class="text-muted">Secure</small>
+                            </div>
+                            <div class="flex-fill">
+                                <i class="fas fa-truck text-success"></i>
+                                <br><small class="text-muted">Fast Delivery</small>
+                            </div>
+                            <div class="flex-fill">
+                                <i class="fas fa-undo text-success"></i>
+                                <br><small class="text-muted">Easy Returns</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty Cart -->
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-shopping-cart text-muted mb-4" style="font-size: 5rem;"></i>
+                <h3>Your cart is empty</h3>
+                <p class="text-muted mb-4">Looks like you haven't added any items to your cart yet.</p>
+                <a href="{{ url_for('products') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+                </a>
+                
+                <!-- Popular Products Suggestion -->
+                <div class="mt-5">
+                    <h5>Popular Products</h5>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card">
+                                <img src="https://images.unsplash.com/photo-1508747703725-719777637510?w=300&h=200&fit=crop" class="card-img-top" alt="Almonds">
+                                <div class="card-body text-center">
+                                    <h6>Premium Almonds</h6>
+                                    <p class="text-success fw-bold">₹799</p>
+                                    <button class="btn btn-sm btn-primary" onclick="addToCart(1)">Add to Cart</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Add more popular products here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.cart-item {
+    transition: all 0.3s ease;
+}
+
+.cart-item:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.quantity-display {
+    min-width: 30px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.btn-sm {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 10px;
+}
+
+.promo-code-section .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(32, 43, 35, 0.25);
+}
+
+.item-total-amount {
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .cart-item {
+        text-align: center;
+    }
+    
+    .cart-item .col-md-3 {
+        margin-bottom: 10px;
+    }
+}
+</style>
+
+<script>
+// Update quantity function
+function updateQuantity(cartId, newQuantity) {
+    if (newQuantity < 1) {
+        removeFromCart(cartId);
+        return;
+    }
+
+    const cartItem = document.querySelector(`.cart-item[data-cart-id="${cartId}"]`);
+    const quantityDisplay = cartItem.querySelector('.quantity-display');
+    const itemTotalElement = cartItem.querySelector('.item-total-amount');
+    
+    // Show loading
+    quantityDisplay.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    fetch('/api/cart/update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            cart_id: cartId, 
+            quantity: newQuantity 
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            quantityDisplay.textContent = newQuantity;
+            updateCartTotals();
+            updateCartCount();
+            showToast('Cart updated successfully', 'success');
+        } else {
+            showToast(data.message || 'Error updating cart', 'error');
+            // Restore original quantity
+            quantityDisplay.textContent = newQuantity - 1;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error updating cart', 'error');
+        quantityDisplay.textContent = newQuantity - 1;
+    });
+}
+
+// Remove from cart function
+function removeFromCart(cartId) {
+    if (!confirm('Remove this item from cart?')) return;
+
+    const cartItem = document.querySelector(`.cart-item[data-cart-id="${cartId}"]`);
+    
+    // Add removing animation
+    cartItem.style.opacity = '0.5';
+    cartItem.style.pointerEvents = 'none';
+
+    fetch('/api/cart/remove', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cart_id: cartId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            cartItem.remove();
+            updateCartTotals();
+            updateCartCount();
+            showToast('Item removed from cart', 'success');
+            
+            // Check if cart is empty
+            const remainingItems = document.querySelectorAll('.cart-item').length;
+            if (remainingItems === 0) {
+                location.reload(); // Reload to show empty cart
+            }
+        } else {
+            showToast(data.message || 'Error removing item', 'error');
+            cartItem.style.opacity = '1';
+            cartItem.style.pointerEvents = 'auto';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error removing item', 'error');
+        cartItem.style.opacity = '1';
+        cartItem.style.pointerEvents = 'auto';
+    });
+}
+
+// Clear entire cart
+function clearCart() {
+    if (!confirm('Are you sure you want to clear your entire cart?')) return;
+
+    const cartItems = document.querySelectorAll('.cart-item');
+    const promises = [];
+
+    cartItems.forEach(item => {
+        const cartId = item.getAttribute('data-cart-id');
+        promises.push(
+            fetch('/api/cart/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ cart_id: cartId })
+            })
+        );
+    });
+
+    Promise.all(promises)
+    .then(() => {
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error clearing cart:', error);
+        showToast('Error clearing cart', 'error');
+    });
+}
+
+// Update cart totals
+function updateCartTotals() {
+    let subtotal = 0;
+    let itemCount = 0;
+
+    document.querySelectorAll('.cart-item').forEach(item => {
+        const quantityElement = item.querySelector('.quantity-display');
+        const priceElement = item.querySelector('.price-info .fw-bold');
+        
+        if (quantityElement && priceElement) {
+            const quantity = parseInt(quantityElement.textContent);
+            const price = parseFloat(priceElement.textContent.replace('₹', '').replace(',', ''));
+            
+            if (!isNaN(quantity) && !isNaN(price)) {
+                const itemTotal = quantity * price;
+                subtotal += itemTotal;
+                itemCount += quantity;
+                
+                // Update individual item total
+                const itemTotalElement = item.querySelector('.item-total-amount');
+                if (itemTotalElement) {
+                    itemTotalElement.textContent = `₹${itemTotal.toFixed(2)}`;
+                }
+            }
+        }
+    });
+
+    // Update summary
+    document.getElementById('item-count').textContent = itemCount;
+    document.getElementById('subtotal-amount').textContent = `₹${subtotal.toFixed(2)}`;
+    
+    // Update shipping
+    const shippingElement = document.getElementById('shipping-amount');
+    const shippingCharge = subtotal >= 500 ? 0 : 50;
+    shippingElement.textContent = shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`;
+    shippingElement.className = shippingCharge === 0 ? 'text-success' : '';
+    
+    // Update tax
+    const taxAmount = subtotal * 0.05;
+    document.getElementById('tax-amount').textContent = `₹${taxAmount.toFixed(2)}`;
+    
+    // Update total
+    const totalAmount = subtotal + shippingCharge + taxAmount;
+    document.getElementById('total-amount').textContent = `₹${totalAmount.toFixed(2)}`;
+    
+    // Update shipping progress
+    updateShippingProgress(subtotal);
+}
+
+// Update shipping progress
+function updateShippingProgress(subtotal) {
+    const progressContainer = document.getElementById('shipping-progress');
+    if (!progressContainer) return;
+    
+    if (subtotal >= 500) {
+        progressContainer.style.display = 'none';
+    } else {
+        progressContainer.style.display = 'block';
+        const remaining = 500 - subtotal;
+        const progressPercent = (subtotal / 500) * 100;
+        
+        document.getElementById('remaining-for-free-shipping').textContent = remaining.toFixed(0);
+        document.getElementById('shipping-progress-bar').style.width = `${progressPercent}%`;
+    }
+}
+
+// Apply promo code
+function applyPromoCode() {
+    const code = document.getElementById('promoCodeInput').value.trim();
+    const messageDiv = document.getElementById('promoCodeMessage');
+    
+    if (!code) {
+        messageDiv.innerHTML = '<small class="text-danger">Please enter a promo code</small>';
+        return;
+    }
+    
+    fetch('/apply_promocode', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code: code })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            messageDiv.innerHTML = `<small class="text-success">${data.message}</small>`;
+            // Refresh page to show updated totals
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            messageDiv.innerHTML = `<small class="text-danger">${data.message}</small>`;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        messageDiv.innerHTML = '<small class="text-danger">Error applying promo code</small>';
+    });
+}
+
+// Quick checkout function
+function quickCheckout() {
+    // Redirect to checkout with express checkout flag
+    window.location.href = '{{ url_for("checkout") }}?express=1';
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    updateCartTotals();
+    
+    // Auto-clear promo code messages after 5 seconds
+    setTimeout(() => {
+        const messageDiv = document.getElementById('promoCodeMessage');
+        if (messageDiv) {
+            messageDiv.innerHTML = '';
+        }
+    }, 5000);
+});
+</script>
+{% endblock %}

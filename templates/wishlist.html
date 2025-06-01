@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}My Wishlist - NutsDelight{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- User Menu -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">My Account</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('profile') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user me-2"></i>Profile
+                    </a>
+                    <a href="{{ url_for('user_orders') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-bag me-2"></i>My Orders
+                    </a>
+                    <a href="{{ url_for('wishlist') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-heart me-2"></i>Wishlist
+                    </a>
+                    <a href="{{ url_for('wallet') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-wallet me-2"></i>Wallet
+                    </a>
+                    <a href="{{ url_for('promocodes') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tags me-2"></i>Promocodes
+                    </a>
+                    <a href="{{ url_for('referrals') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i>Referrals
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">My Wishlist ({{ wishlist_items|length }} items)</h5>
+                </div>
+                <div class="card-body">
+                    {% if wishlist_items %}
+                        <div class="row">
+                            {% for item in wishlist_items %}
+                            <div class="col-lg-4 col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="position-relative">
+                                        <img src="{{ item.image_url or 'https://via.placeholder.com/300x200' }}" 
+                                             class="card-img-top" alt="{{ item.product_name }}" style="height: 200px; object-fit: cover;">
+                                        <button class="btn btn-danger position-absolute top-0 end-0 m-2 btn-sm rounded-circle"
+                                                onclick="removeFromWishlist({{ item.product_id }})">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="card-body d-flex flex-column">
+                                        <h6 class="card-title">{{ item.product_name }}</h6>
+                                        <div class="price-section mb-3">
+                                            {% if item.discount_price %}
+                                                <span class="h5 text-success">₹{{ item.discount_price }}</span>
+                                                <span class="text-muted text-decoration-line-through ms-1">₹{{ item.price }}</span>
+                                            {% else %}
+                                                <span class="h5 text-success">₹{{ item.price }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="mt-auto">
+                                            <button class="btn btn-primary w-100" onclick="addToCart({{ item.product_id }})">
+                                                <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-heart text-muted mb-3" style="font-size: 4rem;"></i>
+                            <h4>Your wishlist is empty</h4>
+                            <p class="text-muted">Save items you love for later</p>
+                            <a href="{{ url_for('products') }}" class="btn btn-primary">Browse Products</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function removeFromWishlist(productId) {
+    fetch('/wishlist/remove', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({product_id: productId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+}
+
+function addToCart(productId) {
+    fetch('/add_to_cart', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({product_id: productId, quantity: 1})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Item added to cart!');
+        } else {
+            alert(data.message);
+        }
+    });
+}
+</script>
+{% endblock %}

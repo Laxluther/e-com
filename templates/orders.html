@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}My Orders - NutsDelight{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- User Menu -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">My Account</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('profile') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user me-2"></i>Profile
+                    </a>
+                    <a href="{{ url_for('user_orders') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-shopping-bag me-2"></i>My Orders
+                    </a>
+                    <a href="{{ url_for('wishlist') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-heart me-2"></i>Wishlist
+                    </a>
+                    <a href="{{ url_for('wallet') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-wallet me-2"></i>Wallet
+                    </a>
+                    <a href="{{ url_for('promocodes') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tags me-2"></i>Promocodes
+                    </a>
+                    <a href="{{ url_for('referrals') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i>Referrals
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">My Orders</h5>
+                </div>
+                <div class="card-body">
+                    {% if orders %}
+                        {% for order in orders %}
+                        <div class="order-item border rounded p-3 mb-3">
+                            <div class="row align-items-center">
+                                <div class="col-md-2">
+                                    <strong>Order #{{ order.order_number or order.order_id[:8] }}</strong>
+                                    <br><small class="text-muted">{{ order.created_at.strftime('%b %d, %Y') if order.created_at else 'N/A' }}</small>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="badge bg-{{ 'success' if order.status == 'delivered' else 'warning' if order.status == 'pending' else 'info' }}">
+                                        {{ order.status.title() }}
+                                    </span>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="fw-bold">₹{{ order.total_amount }}</span>
+                                    <br><small class="text-muted">{{ order.item_count or 1 }} items</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted">{{ order.payment_method.upper() if order.payment_method else 'N/A' }}</small>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <a href="{{ url_for('order_detail', order_id=order.order_id) }}" class="btn btn-outline-primary btn-sm">
+                                        View Details
+                                    </a>
+                                    {% if order.status in ['pending', 'confirmed'] %}
+                                    <button class="btn btn-outline-danger btn-sm">Cancel</button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-bag text-muted mb-3" style="font-size: 4rem;"></i>
+                            <h4>No orders yet</h4>
+                            <p class="text-muted">When you place orders, they'll show up here</p>
+                            <a href="{{ url_for('products') }}" class="btn btn-primary">Start Shopping</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

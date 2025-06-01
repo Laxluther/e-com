@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Promocodes - NutsDelight{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- User Menu -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">My Account</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('profile') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user me-2"></i>Profile
+                    </a>
+                    <a href="{{ url_for('user_orders') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-bag me-2"></i>My Orders
+                    </a>
+                    <a href="{{ url_for('wishlist') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-heart me-2"></i>Wishlist
+                    </a>
+                    <a href="{{ url_for('wallet') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-wallet me-2"></i>Wallet
+                    </a>
+                    <a href="{{ url_for('promocodes') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-tags me-2"></i>Promocodes
+                    </a>
+                    <a href="{{ url_for('referrals') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i>Referrals
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Apply Promocode -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Apply Promocode</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" id="promocodeInput" placeholder="Enter promocode" style="text-transform: uppercase;">
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary w-100" onclick="applyPromocode()">Apply</button>
+                        </div>
+                    </div>
+                    <div id="promocodeMessage" class="mt-2"></div>
+                </div>
+            </div>
+            
+            <!-- Available Promocodes -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Available Promocodes</h5>
+                </div>
+                <div class="card-body">
+                    {% if promocodes %}
+                        <div class="row">
+                            {% for promo in promocodes %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-primary">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="text-primary">{{ promo.code }}</h6>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="copyCode('{{ promo.code }}')">
+                                                Copy
+                                            </button>
+                                        </div>
+                                        <p class="card-text">{{ promo.description }}</p>
+                                        <div class="small text-muted">
+                                            <p class="mb-1">
+                                                <strong>Discount:</strong> 
+                                                {% if promo.discount_type == 'percentage' %}
+                                                    {{ promo.discount_value }}% off
+                                                {% else %}
+                                                    ₹{{ promo.discount_value }} off
+                                                {% endif %}
+                                            </p>
+                                            {% if promo.min_order_amount %}
+                                            <p class="mb-1"><strong>Min Order:</strong> ₹{{ promo.min_order_amount }}</p>
+                                            {% endif %}
+                                            <p class="mb-0"><strong>Valid Until:</strong> {{ promo.valid_until.strftime('%b %d, %Y') }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-tags text-muted mb-3" style="font-size: 3rem;"></i>
+                            <h6>No promocodes available</h6>
+                            <p class="text-muted">Check back later for exciting offers!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function applyPromocode() {
+    const code = document.getElementById('promocodeInput').value;
+    const messageDiv = document.getElementById('promocodeMessage');
+    
+    if (!code) {
+        messageDiv.innerHTML = '<div class="alert alert-danger">Please enter a promocode</div>';
+        return;
+    }
+    
+    fetch('/apply_promocode', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({code: code})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            messageDiv.innerHTML = '<div class="alert alert-success">' + data.message + '</div>';
+        } else {
+            messageDiv.innerHTML = '<div class="alert alert-danger">' + data.message + '</div>';
+        }
+    });
+}
+
+function copyCode(code) {
+    navigator.clipboard.writeText(code);
+    document.getElementById('promocodeInput').value = code;
+    alert('Promocode copied!');
+}
+</script>
+{% endblock %}

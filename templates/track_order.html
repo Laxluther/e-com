@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block title %}Track Your Order - Lorem ipsum{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-4">
+                <h2><i class="fas fa-shipping-fast me-2 text-primary"></i>Track Your Order</h2>
+                <p class="text-muted">Enter your order details to track your shipment</p>
+            </div>
+
+            <!-- Track Order Form -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form id="trackOrderForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="orderNumber" class="form-label">Order Number *</label>
+                                <input type="text" class="form-control" id="orderNumber" 
+                                       placeholder="e.g., ORD20241215ABC123" required>
+                                <small class="text-muted">You can find this in your order confirmation email</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phoneNumber" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phoneNumber" 
+                                       placeholder="Enter registered phone number">
+                                <small class="text-muted">Required for guest orders only</small>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Track Order
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Order Tracking Results -->
+            <div id="trackingResults" style="display: none;">
+                <!-- Order Details -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Order Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Order Number:</strong> <span id="orderNum"></span></p>
+                                <p><strong>Order Date:</strong> <span id="orderDate"></span></p>
+                                <p><strong>Total Amount:</strong> <span id="orderAmount"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Payment Method:</strong> <span id="paymentMethod"></span></p>
+                                <p><strong>Payment Status:</strong> <span id="paymentStatus"></span></p>
+                                <p><strong>Current Status:</strong> <span id="currentStatus"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Order Items</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="orderItems"></div>
+                    </div>
+                </div>
+
+                <!-- Tracking Timeline -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Order Tracking</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="trackingTimeline"></div>
+                    </div>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Shipping Address</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="shippingAddress"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span id="errorText"></span>
+            </div>
+
+            <!-- Quick Order Lookup for Logged-in Users -->
+            {% if session.user_id %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Your Recent Orders</h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <a href="{{ url_for('user_orders') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>View All Orders
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.tracking-timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.tracking-timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -22px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #e9ecef;
+    background: white;
+}
+
+.timeline-item.completed::before {
+    border-color: #28a745;
+    background: #28a745;
+}
+
+.timeline-item.current::before {
+    border-color: #007bff;
+    background: #007bff;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid #e9ecef;
+}
+
+.timeline-item.completed .timeline-content {
+    border-left-color: #28a745;
+}
+
+.timeline-item.current .timeline-content {
+    border-left-color: #007bff;
+    background: rgba(0, 123, 255, 0.1);
+}
+
+.order-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.order-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-right: 15px;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-pending { background: #fff3cd; color: #856404; }
+.status-confirmed { background: #d4edda; color: #155724; }
+.status-processing { background: #cce7ff; color: #004085; }
+.status-shipped { background: #e2e3e5; color: #383d41; }
+.status-delivered { background: #d1ecf1; color: #0c5460; }
+.status-cancelled { background: #f8d7da; color: #721c24; }
+</style>
+
+<script>
+document.getElementById('trackOrderForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const orderNumber = document.getElementById('orderNumber').value.trim();
+    const phoneNumber = document.getElementById('phoneNumber').value.trim();
+    
+    if (!orderNumber) {
+        showError('Please enter an order number');
+        return;
+    }
+    
+    // Show loading
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Tracking...';
+    submitBtn.disabled = true;
+    
+    // Hide previous results
+    document.getElementById('trackingResults').style.display = 'none';
+    document.getElementById('errorMessage').style.display = 'none';
+    
+    // Make API call
+    fetch('/api/track-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            order_number: orderNumber,
+            phone: phoneNumber
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayOrderTracking(data);
+        } else {
+            showError(data.message || 'Order not found');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Error tracking order. Please try again.');
+    })
+    .finally(() => {
+        // Restore button
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+});
+
+function showError(message) {
+    document.getElementById('errorText').textContent = message;
+    document.getElementById('errorMessage').style.display = 'block';
+    document.getElementById('trackingResults').style.display = 'none';
+}
+
+function displayOrderTracking(data) {
+    const order = data.order;
+    const tracking = data.tracking_history;
+    const items = data.order_items;
+    
+    // Display order details
+    document.getElementById('orderNum').textContent = order.order_number;
+    document.getElementById('orderDate').textContent = new Date(order.created_at).toLocaleDateString();
+    document.getElementById('orderAmount').textContent = `₹${order.total_amount}`;
+    document.getElementById('paymentMethod').textContent = order.payment_method.toUpperCase();
+    document.getElementById('paymentStatus').innerHTML = `<span class="status-badge status-${order.payment_status}">${order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}</span>`;
+    document.getElementById('currentStatus').innerHTML = `<span class="status-badge status-${order.status}">${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>`;
+    
+    // Display order items
+    const itemsHtml = items.map(item => `
+        <div class="order-item">
+            <img src="${item.image_url || 'https://via.placeholder.com/60x60'}" alt="${item.product_name}">
+            <div class="flex-grow-1">
+                <h6 class="mb-1">${item.product_name}</h6>
+                <p class="mb-0 text-muted">Quantity: ${item.quantity} | Price: ₹${item.unit_price}</p>
+            </div>
+            <div class="text-end">
+                <strong>₹${item.total_price}</strong>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('orderItems').innerHTML = itemsHtml;
+    
+    // Display tracking timeline
+    const timelineHtml = tracking.map((track, index) => {
+        const isCompleted = index < tracking.length - 1 || order.status === 'delivered';
+        const isCurrent = index === tracking.length - 1 && order.status !== 'delivered';
+        
+        return `
+            <div class="timeline-item ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}">
+                <div class="timeline-content">
+                    <h6 class="mb-1">${track.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h6>
+                    <p class="mb-1">${track.message}</p>
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        ${new Date(track.created_at).toLocaleString()}
+                    </small>
+                    ${track.location ? `<br><small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>${track.location}</small>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+    document.getElementById('trackingTimeline').innerHTML = `<div class="tracking-timeline">${timelineHtml}</div>`;
+    
+    // Display shipping address
+    const address = JSON.parse(order.shipping_address);
+    const addressHtml = `
+        <p><strong>${address.full_name}</strong></p>
+        <p>${address.address_line1}</p>
+        ${address.address_line2 ? `<p>${address.address_line2}</p>` : ''}
+        <p>${address.city}, ${address.state} - ${address.postal_code}</p>
+        <p><strong>Phone:</strong> ${address.phone}</p>
+    `;
+    document.getElementById('shippingAddress').innerHTML = addressHtml;
+    
+    // Show results
+    document.getElementById('trackingResults').style.display = 'block';
+    document.getElementById('errorMessage').style.display = 'none';
+}
+
+// Auto-fill order number from URL parameter if present
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderNumber = urlParams.get('order');
+    if (orderNumber) {
+        document.getElementById('orderNumber').value = orderNumber;
+    }
+});
+</script>
+{% endblock %}

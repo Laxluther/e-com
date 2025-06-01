@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Referrals - NutsDelight{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- User Menu -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">My Account</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('profile') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user me-2"></i>Profile
+                    </a>
+                    <a href="{{ url_for('user_orders') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-bag me-2"></i>My Orders
+                    </a>
+                    <a href="{{ url_for('wishlist') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-heart me-2"></i>Wishlist
+                    </a>
+                    <a href="{{ url_for('wallet') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-wallet me-2"></i>Wallet
+                    </a>
+                    <a href="{{ url_for('promocodes') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tags me-2"></i>Promocodes
+                    </a>
+                    <a href="{{ url_for('referrals') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-users me-2"></i>Referrals
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Referral Code -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Your Referral Code</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" value="{{ referral_code }}" id="referralCode" readonly>
+                                <button class="btn btn-primary" onclick="copyReferralCode()">Copy</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center">
+                                <h6 class="text-primary">Earn ₹50 for each referral!</h6>
+                                <small class="text-muted">Your friend gets ₹50 off too</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <h6>Share with friends:</h6>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-success" onclick="shareWhatsApp()">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                </button>
+                                <button class="btn btn-primary" onclick="shareFacebook()">
+                                    <i class="fab fa-facebook"></i> Facebook
+                                </button>
+                                <button class="btn btn-info" onclick="shareTwitter()">
+                                    <i class="fab fa-twitter"></i> Twitter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Referral Stats -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h3>{{ stats.total_referrals or 0 }}</h3>
+                            <p class="mb-0">Total Referrals</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h3>₹{{ stats.total_earned or 0 }}</h3>
+                            <p class="mb-0">Total Earned</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Referrals -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Referrals</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_referrals %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Friend</th>
+                                        <th>Joined Date</th>
+                                        <th>Reward</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for referral in recent_referrals %}
+                                    <tr>
+                                        <td>{{ referral.first_name }} {{ referral.last_name }}</td>
+                                        <td>{{ referral.created_at.strftime('%b %d, %Y') if referral.created_at else 'N/A' }}</td>
+                                        <td>₹{{ referral.reward_amount or 50 }}</td>
+                                        <td>
+                                            <span class="badge bg-success">Completed</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users text-muted mb-3" style="font-size: 3rem;"></i>
+                            <h6>No referrals yet</h6>
+                            <p class="text-muted">Start sharing your code to earn rewards!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyReferralCode() {
+    const code = document.getElementById('referralCode');
+    code.select();
+    navigator.clipboard.writeText(code.value);
+    alert('Referral code copied!');
+}
+
+function shareWhatsApp() {
+    const text = `Hey! Join NutsDelight and get ₹50 off on your first order. Use my referral code: {{ referral_code }} 
+🌰 Fresh nuts, seeds, coffee & honey delivered to your door!
+Sign up now: ${window.location.origin}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+}
+
+function shareFacebook() {
+    const url = `${window.location.origin}?ref={{ referral_code }}`;
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+}
+
+function shareTwitter() {
+    const text = `Join NutsDelight with my referral code {{ referral_code }} and get ₹50 off! 🌰`;
+    const url = `${window.location.origin}?ref={{ referral_code }}`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
+}
+</script>
+{% endblock %}

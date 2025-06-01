@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - Lorem ipsum{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 text-center">
+            <div class="error-content">
+                <div class="error-number mb-4">
+                    <span class="display-1 fw-bold text-danger">5</span>
+                    <span class="display-1 fw-bold text-warning">0</span>
+                    <span class="display-1 fw-bold text-danger">0</span>
+                </div>
+                
+                <div class="error-icon mb-4">
+                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+                </div>
+                
+                <h1 class="h2 mb-3">Something Went Wrong</h1>
+                <p class="lead text-muted mb-4">
+                    We're experiencing some technical difficulties. Our team has been notified and is working to fix this issue.
+                </p>
+                
+                <!-- What to do -->
+                <div class="card border-warning mb-4">
+                    <div class="card-body">
+                        <h6 class="card-title text-warning">
+                            <i class="fas fa-info-circle me-2"></i>What can you do?
+                        </h6>
+                        <ul class="list-unstyled text-start">
+                            <li class="mb-2"><i class="fas fa-refresh text-success me-2"></i>Try refreshing the page</li>
+                            <li class="mb-2"><i class="fas fa-clock text-info me-2"></i>Wait a few minutes and try again</li>
+                            <li class="mb-2"><i class="fas fa-home text-primary me-2"></i>Go back to the homepage</li>
+                            <li><i class="fas fa-envelope text-warning me-2"></i>Contact support if the problem persists</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-center gap-3 mb-4">
+                    <button onclick="location.reload()" class="btn btn-warning btn-lg">
+                        <i class="fas fa-refresh me-2"></i>Try Again
+                    </button>
+                    <a href="{{ url_for('home') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home me-2"></i>Go Home
+                    </a>
+                </div>
+                
+                <!-- Contact Support -->
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">Need immediate assistance?</h6>
+                        <p class="card-text small text-muted">
+                            Our support team is here to help. Contact us and we'll get back to you as soon as possible.
+                        </p>
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="{{ url_for('contact') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-envelope me-1"></i>Contact Support
+                            </a>
+                            <a href="tel:+919876543210" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-phone me-1"></i>Call Us
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Error ID (for support reference) -->
+                <div class="mt-4">
+                    <small class="text-muted">
+                        Error ID: {{ error_id or 'ERR-' + moment().format('YYYYMMDD-HHmmss') }}<br>
+                        Time: {{ moment().format('YYYY-MM-DD HH:mm:ss') }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-number {
+    animation: shake 0.5s ease-in-out infinite alternate;
+}
+
+.error-icon {
+    animation: pulse 2s infinite;
+}
+
+@keyframes shake {
+    from { transform: translateX(-2px); }
+    to { transform: translateX(2px); }
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+// Auto-retry mechanism (optional)
+let retryCount = 0;
+const maxRetries = 3;
+
+function autoRetry() {
+    if (retryCount < maxRetries) {
+        retryCount++;
+        setTimeout(() => {
+            if (confirm(`Attempt ${retryCount}/${maxRetries}: Try to reload the page?`)) {
+                location.reload();
+            }
+        }, 5000 * retryCount); // Increasing delay
+    }
+}
+
+// Start auto-retry after 10 seconds
+setTimeout(autoRetry, 10000);
+
+// Track error for analytics (if implemented)
+if (typeof gtag !== 'undefined') {
+    gtag('event', 'exception', {
+        'description': '500 Internal Server Error',
+        'fatal': false
+    });
+}
+</script>
+{% endblock %}

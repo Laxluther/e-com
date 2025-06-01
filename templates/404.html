@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - Lorem ipsum{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 text-center">
+            <div class="error-content">
+                <div class="error-number mb-4">
+                    <span class="display-1 fw-bold text-primary">4</span>
+                    <span class="display-1 fw-bold text-warning">0</span>
+                    <span class="display-1 fw-bold text-primary">4</span>
+                </div>
+                
+                <div class="error-icon mb-4">
+                    <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
+                </div>
+                
+                <h1 class="h2 mb-3">Oops! Page Not Found</h1>
+                <p class="lead text-muted mb-4">
+                    The page you're looking for doesn't exist or has been moved. 
+                    Don't worry, it happens to the best of us!
+                </p>
+                
+                <!-- Search Box -->
+                <div class="mb-4">
+                    <form action="{{ url_for('products') }}" method="GET" class="d-flex justify-content-center">
+                        <div class="input-group" style="max-width: 400px;">
+                            <input type="text" class="form-control" name="search" placeholder="Search for products...">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-center gap-3 mb-4">
+                    <a href="{{ url_for('home') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home me-2"></i>Go Home
+                    </a>
+                    <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-shopping-bag me-2"></i>Shop Now
+                    </a>
+                </div>
+                
+                <!-- Popular Links -->
+                <div class="popular-links">
+                    <h6 class="text-muted mb-3">Or try these popular pages:</h6>
+                    <div class="row">
+                        <div class="col-6 col-md-3 mb-2">
+                            <a href="{{ url_for('products', category=1) }}" class="btn btn-outline-secondary btn-sm w-100">
+                                <i class="fas fa-seedling me-1"></i>Nuts
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 mb-2">
+                            <a href="{{ url_for('products', category=2) }}" class="btn btn-outline-secondary btn-sm w-100">
+                                <i class="fas fa-spa me-1"></i>Seeds
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 mb-2">
+                            <a href="{{ url_for('products', category=3) }}" class="btn btn-outline-secondary btn-sm w-100">
+                                <i class="fas fa-coffee me-1"></i>Coffee
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 mb-2">
+                            <a href="{{ url_for('products', category=4) }}" class="btn btn-outline-secondary btn-sm w-100">
+                                <i class="fas fa-tint me-1"></i>Honey
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Help Section -->
+                <div class="mt-5">
+                    <p class="text-muted">
+                        Need help? <a href="{{ url_for('contact') }}" class="text-decoration-none">Contact our support team</a> 
+                        or check our <a href="{{ url_for('faq') }}" class="text-decoration-none">FAQ</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-number {
+    animation: bounce 2s infinite;
+}
+
+.error-icon {
+    animation: fadeInUp 1s ease-out;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.popular-links .btn {
+    transition: all 0.3s ease;
+}
+
+.popular-links .btn:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Lorem ipsum{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-success">Join Lorem ipsum!</h2>
+                        <p class="text-muted">Create your account to start shopping</p>
+                    </div>
+
+                    <form method="POST" novalidate>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" 
+                                           placeholder="First name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" 
+                                           placeholder="Last name" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-envelope text-muted"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       placeholder="Enter your email" required>
+                            </div>
+                            <small class="text-muted">We'll never share your email with anyone else.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-phone text-muted"></i>
+                                </span>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       placeholder="Enter your phone number" required pattern="[0-9]{10}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock text-muted"></i>
+                                </span>
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       placeholder="Create a strong password" required minlength="6">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength mt-2">
+                                <small class="text-muted">Password strength: <span id="strength-text">Weak</span></small>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar" id="strength-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock text-muted"></i>
+                                </span>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                       placeholder="Confirm your password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="text-danger d-none" id="password-mismatch">Passwords do not match</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="#" class="text-decoration-none">Terms & Conditions</a> 
+                                    and <a href="#" class="text-decoration-none">Privacy Policy</a> *
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="newsletter">
+                                <label class="form-check-label" for="newsletter">
+                                    Subscribe to our newsletter for latest offers and updates
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                            <i class="fas fa-user-plus me-2"></i>Create Account
+                        </button>
+
+                        <div class="text-center">
+                            <p class="text-muted mb-0">
+                                Already have an account? 
+                                <a href="{{ url_for('login') }}" class="text-decoration-none fw-bold">Sign In</a>
+                            </p>
+                        </div>
+                    </form>
+
+                    <!-- Social Registration Options -->
+                    <div class="mt-4">
+                        <div class="row text-center">
+                            <div class="col">
+                                <hr class="my-4">
+                                <p class="text-muted small">Or register with</p>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button class="btn btn-outline-danger w-100" type="button">
+                                    <i class="fab fa-google me-2"></i>Google
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-outline-primary w-100" type="button">
+                                    <i class="fab fa-facebook-f me-2"></i>Facebook
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Benefits Section -->
+            <div class="row mt-4">
+                <div class="col-md-4 text-center mb-3">
+                    <i class="fas fa-gift text-success mb-2" style="font-size: 2rem;"></i>
+                    <h6>Welcome Bonus</h6>
+                    <p class="text-muted small">Get 10% off on your first order</p>
+                </div>
+                <div class="col-md-4 text-center mb-3">
+                    <i class="fas fa-users text-success mb-2" style="font-size: 2rem;"></i>
+                    <h6>Refer & Earn</h6>
+                    <p class="text-muted small">Earn rewards for every referral</p>
+                </div>
+                <div class="col-md-4 text-center mb-3">
+                    <i class="fas fa-crown text-success mb-2" style="font-size: 2rem;"></i>
+                    <h6>VIP Treatment</h6>
+                    <p class="text-muted small">Priority customer support</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-right: none;
+    }
+    
+    .input-group .form-control {
+        border-left: none;
+    }
+    
+    .input-group .form-control:focus {
+        border-left: none;
+        box-shadow: none;
+    }
+    
+    .card {
+        border-radius: 20px;
+    }
+
+    .progress {
+        background-color: #e9ecef;
+    }
+
+    .strength-weak { background-color: #dc3545; }
+    .strength-medium { background-color: #ffc107; }
+    .strength-strong { background-color: #28a745; }
+
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 2rem !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle password visibility
+    function togglePasswordVisibility(toggleBtn, passwordField) {
+        toggleBtn.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+
+    togglePasswordVisibility(
+        document.getElementById('togglePassword'),
+        document.getElementById('password')
+    );
+
+    togglePasswordVisibility(
+        document.getElementById('toggleConfirmPassword'),
+        document.getElementById('confirm_password')
+    );
+
+    // Password strength checker
+    document.getElementById('password').addEventListener('input', function() {
+        const password = this.value;
+        const strengthBar = document.getElementById('strength-bar');
+        const strengthText = document.getElementById('strength-text');
+        
+        let strength = 0;
+        let strengthLabel = 'Weak';
+        let strengthClass = 'strength-weak';
+        
+        if (password.length >= 6) strength += 1;
+        if (password.match(/[a-z]/)) strength += 1;
+        if (password.match(/[A-Z]/)) strength += 1;
+        if (password.match(/[0-9]/)) strength += 1;
+        if (password.match(/[^a-zA-Z0-9]/)) strength += 1;
+        
+        if (strength >= 3) {
+            strengthLabel = 'Medium';
+            strengthClass = 'strength-medium';
+        }
+        if (strength >= 4) {
+            strengthLabel = 'Strong';
+            strengthClass = 'strength-strong';
+        }
+        
+        const percentage = (strength / 5) * 100;
+        strengthBar.style.width = percentage + '%';
+        strengthBar.className = `progress-bar ${strengthClass}`;
+        strengthText.textContent = strengthLabel;
+    });
+
+    // Password confirmation check
+    function checkPasswordMatch() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        const mismatchMsg = document.getElementById('password-mismatch');
+        
+        if (confirmPassword && password !== confirmPassword) {
+            mismatchMsg.classList.remove('d-none');
+            return false;
+        } else {
+            mismatchMsg.classList.add('d-none');
+            return true;
+        }
+    }
+
+    document.getElementById('confirm_password').addEventListener('input', checkPasswordMatch);
+    document.getElementById('password').addEventListener('input', checkPasswordMatch);
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const firstName = document.getElementById('first_name').value;
+        const lastName = document.getElementById('last_name').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        const terms = document.getElementById('terms').checked;
+        
+        // Basic validation
+        if (!firstName || !lastName || !email || !phone || !password || !confirmPassword) {
+            e.preventDefault();
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        if (!isValidEmail(email)) {
+            e.preventDefault();
+            alert('Please enter a valid email address');
+            return;
+        }
+        
+        if (!isValidPhone(phone)) {
+            e.preventDefault();
+            alert('Please enter a valid 10-digit phone number');
+            return;
+        }
+        
+        if (password.length < 6) {
+            e.preventDefault();
+            alert('Password must be at least 6 characters long');
+            return;
+        }
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match');
+            return;
+        }
+        
+        if (!terms) {
+            e.preventDefault();
+            alert('Please accept the Terms & Conditions');
+            return;
+        }
+    });
+
+    function isValidEmail(email) {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPattern.test(email);
+    }
+
+    function isValidPhone(phone) {
+        const phonePattern = /^[0-9]{10}$/;
+        return phonePattern.test(phone);
+    }
+
+    // Phone number formatting
+    document.getElementById('phone').addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '');
+        if (this.value.length > 10) {
+            this.value = this.value.slice(0, 10);
+        }
+    });
+
+    // Social registration handlers (placeholder)
+    document.querySelectorAll('.btn-outline-danger, .btn-outline-primary').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const provider = this.textContent.trim();
+            alert(`${provider} registration integration coming soon!`);
+        });
+    });
+
+    // Auto-focus on first name field
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('first_name').focus();
+    });
+
+    // Add loading state to submit button
+    document.querySelector('form').addEventListener('submit', function() {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
+        submitBtn.disabled = true;
+    });
+</script>
+{% endblock %}

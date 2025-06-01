@@ -1,0 +1,1038 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - Lorem ipsum{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4"><i class="fas fa-credit-card me-2 text-primary"></i>Checkout</h2>
+            
+            <!-- Checkout Steps -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="step active">
+                            <span class="step-number">1</span>
+                            <span class="step-text">Cart</span>
+                        </div>
+                        <div class="step active">
+                            <span class="step-number">2</span>
+                            <span class="step-text">Checkout</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">3</span>
+                            <span class="step-text">Payment</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">4</span>
+                            <span class="step-text">Confirmation</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Checkout Form -->
+        <div class="col-lg-8">
+            <form id="checkoutForm">
+                <!-- Delivery Address -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Delivery Address</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if addresses %}
+                            {% for address in addresses %}
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="address" id="address{{ address.address_id }}" 
+                                       value="{{ address.address_id }}" {{ 'checked' if address.is_default else '' }}>
+                                <label class="form-check-label w-100" for="address{{ address.address_id }}">
+                                    <div class="address-card p-3 border rounded">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <strong>{{ address.full_name }}</strong>
+                                                {% if address.is_default %}
+                                                    <span class="badge bg-primary ms-2">Default</span>
+                                                {% endif %}
+                                            </div>
+                                            <small class="text-muted">{{ address.address_type.title() }}</small>
+                                        </div>
+                                        <div class="mt-2">
+                                            <p class="mb-1">{{ address.address_line1 }}</p>
+                                            {% if address.address_line2 %}
+                                            <p class="mb-1">{{ address.address_line2 }}</p>
+                                            {% endif %}
+                                            <p class="mb-1">{{ address.city }}, {{ address.state }} - {{ address.postal_code }}</p>
+                                            <p class="mb-0"><strong>Phone:</strong> {{ address.phone }}</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                            {% endfor %}
+                            
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                                <i class="fas fa-plus me-2"></i>Add New Address
+                            </button>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-map-marker-alt text-muted mb-3" style="font-size: 3rem;"></i>
+                                <h6>No addresses found</h6>
+                                <p class="text-muted">Please add a delivery address to continue</p>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                                    <i class="fas fa-plus me-2"></i>Add Address
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Method</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check payment-option">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="cod" value="cod" checked>
+                                    <label class="form-check-label w-100" for="cod">
+                                        <div class="payment-card p-3 border rounded">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-money-bill-wave text-success me-3 fs-4"></i>
+                                                <div>
+                                                    <strong>Cash on Delivery</strong>
+                                                    <br><small class="text-muted">Pay when you receive your order</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check payment-option">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="wallet" value="wallet">
+                                    <label class="form-check-label w-100" for="wallet">
+                                        <div class="payment-card p-3 border rounded">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-wallet text-primary me-3 fs-4"></i>
+                                                <div>
+                                                    <strong>Wallet</strong>
+                                                    <br><small class="text-muted" id="walletBalance">Balance: Loading...</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check payment-option">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="online" value="online">
+                                    <label class="form-check-label w-100" for="online">
+                                        <div class="payment-card p-3 border rounded">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-credit-card text-info me-3 fs-4"></i>
+                                                <div>
+                                                    <strong>Online Payment</strong>
+                                                    <br><small class="text-muted">Credit/Debit Card, Net Banking, UPI</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check payment-option">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="upi" value="upi">
+                                    <label class="form-check-label w-100" for="upi">
+                                        <div class="payment-card p-3 border rounded">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-mobile-alt text-warning me-3 fs-4"></i>
+                                                <div>
+                                                    <strong>UPI Payment</strong>
+                                                    <br><small class="text-muted">Google Pay, PhonePe, Paytm</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Notes -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-sticky-note me-2"></i>Order Notes (Optional)</h5>
+                    </div>
+                    <div class="card-body">
+                        <textarea class="form-control" id="orderNotes" rows="3" 
+                                  placeholder="Any special instructions for delivery..."></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Order Items -->
+                    <div class="order-items mb-3">
+                        {% for item in cart_items %}
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="{{ item.image_url or 'https://via.placeholder.com/60x60' }}" 
+                                 alt="{{ item.product_name }}" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ item.product_name }}</h6>
+                                <small class="text-muted">Qty: {{ item.quantity }}</small>
+                                <div class="fw-bold">
+                                    ₹{{ (item.discount_price or item.price) * item.quantity }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <hr>
+
+                    <!-- Price Breakdown -->
+                    <div class="price-breakdown">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal ({{ cart_items|length }} items)</span>
+                            <span>₹{{ subtotal }}</span>
+                        </div>
+                        
+                        {% if discount_amount > 0 %}
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>Discount</span>
+                            <span>-₹{{ discount_amount }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shipping</span>
+                            <span class="{{ 'text-success' if shipping_charge == 0 else '' }}">
+                                {% if shipping_charge == 0 %}FREE{% else %}₹{{ shipping_charge }}{% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax (GST 5%)</span>
+                            <span>₹{{ "%.2f"|format(tax_amount) }}</span>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="fw-bold fs-5">Total</span>
+                            <span class="fw-bold fs-5 text-primary">₹{{ "%.2f"|format(total_amount) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Place Order Button -->
+                    <button type="button" class="btn btn-primary btn-lg w-100" onclick="placeOrder()" id="placeOrderBtn">
+                        <i class="fas fa-shopping-bag me-2"></i>Place Order
+                    </button>
+                    
+                    <!-- Security Info -->
+                    <div class="mt-3 text-center">
+                        <small class="text-muted">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Your payment information is secure and encrypted
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add this in the Order Summary section -->
+<div class="tax-breakdown mb-3">
+    <h6>Tax Breakdown</h6>
+    {% if tax_breakdown.total_cgst > 0 %}
+        <div class="d-flex justify-content-between small">
+            <span>CGST ({{ "%.1f"|format(tax_breakdown.items[0].gst_rate/2) }}%)</span>
+            <span>₹{{ "%.2f"|format(tax_breakdown.total_cgst) }}</span>
+        </div>
+        <div class="d-flex justify-content-between small">
+            <span>SGST ({{ "%.1f"|format(tax_breakdown.items[0].gst_rate/2) }}%)</span>
+            <span>₹{{ "%.2f"|format(tax_breakdown.total_sgst) }}</span>
+        </div>
+    {% else %}
+        <div class="d-flex justify-content-between small">
+            <span>IGST ({{ "%.1f"|format(tax_breakdown.items[0].gst_rate) }}%)</span>
+            <span>₹{{ "%.2f"|format(tax_breakdown.total_igst) }}</span>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Add state code field to address form -->
+<div class="col-md-6 mb-3">
+    <label for="state_code" class="form-label">State</label>
+    <select class="form-select" name="state_code" required onchange="updateTaxCalculation()">
+        <option value="">Select State</option>
+        {% for code, name in indian_states.items() %}
+        <option value="{{ code }}">{{ name }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+Issues Found:
+
+    Missing checkout route - The checkout page calculates totals but doesn't have a proper backend route
+    Promocode not updating checkout totals - Applied promocodes don't refresh the page
+    Tax calculation integration issues
+    Missing API endpoints for cart operations in checkout
+
+Now I need to fix the frontend checkout.html to properly integrate with these new API endpoints and handle promocode application with real-time total updates.
+
+Now I need to fix the checkout route in app.py to properly handle the calculation and display. The current checkout route doesn't seem to calculate the tax breakdown properly or handle the promocode application correctly. Let me create an updated checkout route.
+
+Now I need to also add some sample promocodes to the database so that the user can test the functionality. Let me create a SQL script to insert some test promocodes.
+
+Now let me create a simple test script that the user can run to verify that the checkout and promocode functionality is working correctly.
+
+Let me create one more artifact with a comprehensive summary of all the fixes and changes needed.
+
+Let me search the web to see if there are any recent best practices for e-commerce checkout flows that we should consider implementing.
+Retry
+
+
+<!-- Add this promocode section to your checkout.html after the Order Notes card -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-tag me-2"></i>Promo Code</h5>
+    </div>
+    <div class="card-body">
+        <div id="promocodeSection">
+            <div class="input-group">
+                <input type="text" class="form-control" id="promocodeInput" 
+                       placeholder="Enter promo code" style="text-transform: uppercase;">
+                <button class="btn btn-outline-primary" type="button" id="applyPromoBtn" onclick="applyPromocode()">
+                    Apply
+                </button>
+            </div>
+            <div id="promocodeMessage" class="mt-2"></div>
+        </div>
+        
+        <!-- Applied Promocode Display -->
+        <div id="appliedPromocode" style="display: none;">
+            <div class="alert alert-success d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong id="appliedCode"></strong> applied successfully!
+                    <br><small id="promoDescription"></small>
+                </div>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removePromocode()">
+                    <i class="fas fa-times"></i> Remove
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update the Order Summary section with dynamic pricing -->
+<div class="col-lg-4">
+    <div class="card sticky-top" style="top: 20px;">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Order Summary</h5>
+        </div>
+        <div class="card-body" id="orderSummary">
+            <!-- Order Items -->
+            <div class="order-items mb-3">
+                {% for item in cart_items %}
+                <div class="d-flex align-items-center mb-3">
+                    <img src="{{ item.image_url or 'https://via.placeholder.com/60x60' }}" 
+                         alt="{{ item.product_name }}" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">{{ item.product_name }}</h6>
+                        <small class="text-muted">Qty: {{ item.quantity }}</small>
+                        <div class="fw-bold">
+                            ₹{{ (item.discount_price or item.price) * item.quantity }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <hr>
+
+            <!-- Dynamic Price Breakdown -->
+            <div class="price-breakdown" id="priceBreakdown">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal ({{ cart_items|length }} items)</span>
+                    <span id="subtotalAmount">₹{{ subtotal }}</span>
+                </div>
+                
+                <div class="d-flex justify-content-between mb-2" id="discountRow" style="display: none;">
+                    <span class="text-success">Discount <span id="discountCode"></span></span>
+                    <span class="text-success" id="discountAmount">-₹0</span>
+                </div>
+                
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Shipping</span>
+                    <span id="shippingAmount" class="{{ 'text-success' if shipping_charge == 0 else '' }}">
+                        {% if shipping_charge == 0 %}FREE{% else %}₹{{ shipping_charge }}{% endif %}
+                    </span>
+                </div>
+                
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Tax (GST)</span>
+                    <span id="taxAmount">₹{{ "%.2f"|format(tax_breakdown.total_tax) }}</span>
+                </div>
+                
+                <!-- Tax Breakdown -->
+                <div class="tax-breakdown mb-2" id="taxBreakdown">
+                    {% if tax_breakdown.total_cgst > 0 %}
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>CGST</span>
+                            <span id="cgstAmount">₹{{ "%.2f"|format(tax_breakdown.total_cgst) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>SGST</span>
+                            <span id="sgstAmount">₹{{ "%.2f"|format(tax_breakdown.total_sgst) }}</span>
+                        </div>
+                    {% else %}
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>IGST</span>
+                            <span id="igstAmount">₹{{ "%.2f"|format(tax_breakdown.total_igst) }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <hr>
+                
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="fw-bold fs-5">Total</span>
+                    <span class="fw-bold fs-5 text-primary" id="totalAmount">₹{{ "%.2f"|format(total_amount) }}</span>
+                </div>
+            </div>
+
+            <!-- Place Order Button -->
+            <button type="button" class="btn btn-primary btn-lg w-100" onclick="placeOrder()" id="placeOrderBtn">
+                <i class="fas fa-shopping-bag me-2"></i>Place Order
+            </button>
+            
+            <!-- Security Info -->
+            <div class="mt-3 text-center">
+                <small class="text-muted">
+                    <i class="fas fa-shield-alt me-1"></i>
+                    Your payment information is secure and encrypted
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add Address Modal -->
+<div class="modal fade" id="addAddressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_address') }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="full_name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" name="full_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="tel" class="form-control" name="phone" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address_line1" class="form-label">Address Line 1</label>
+                        <input type="text" class="form-control" name="address_line1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address_line2" class="form-label">Address Line 2 (Optional)</label>
+                        <input type="text" class="form-control" name="address_line2">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="city" class="form-label">City</label>
+                            <input type="text" class="form-control" name="city" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="state" class="form-label">State</label>
+                            <input type="text" class="form-control" name="state" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="postal_code" class="form-label">PIN Code</label>
+                            <input type="text" class="form-control" name="postal_code" required>
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="is_default" id="is_default">
+                        <label class="form-check-label" for="is_default">
+                            Set as default address
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+}
+
+.step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: calc(50% + 20px);
+    width: calc(100% - 40px);
+    height: 2px;
+    background: #ddd;
+}
+
+.step.active:not(:last-child)::after {
+    background: var(--primary-color);
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #ddd;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.step.active .step-number {
+    background: var(--primary-color);
+}
+
+.step-text {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.step.active .step-text {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.address-card, .payment-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.form-check-input:checked ~ .form-check-label .address-card,
+.form-check-input:checked ~ .form-check-label .payment-card {
+    border-color: var(--primary-color);
+    background-color: rgba(32, 43, 35, 0.05);
+}
+
+.payment-option:hover .payment-card {
+    border-color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .step-text {
+        font-size: 0.8rem;
+    }
+    
+    .step-number {
+        width: 25px;
+        height: 25px;
+        font-size: 0.8rem;
+    }
+}
+</style>
+
+<script>
+    // Global variables
+let currentTotals = null;
+let currentStateCode = 'MH';
+
+// Load initial data
+document.addEventListener('DOMContentLoaded', function() {
+    loadWalletBalance();
+    loadCheckoutTotals();
+    
+    // Listen for address changes to recalculate tax
+    document.querySelectorAll('input[name="address"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Get state from selected address and recalculate
+            updateTaxCalculationFromAddress();
+        });
+    });
+});
+
+// Load wallet balance
+function loadWalletBalance() {
+    fetch('/api/wallet/balance')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('walletBalance').textContent = `Balance: ₹${data.balance.toFixed(2)}`;
+        }
+    })
+    .catch(error => {
+        document.getElementById('walletBalance').textContent = 'Balance: ₹0.00';
+    });
+}
+
+// Load checkout totals
+function loadCheckoutTotals(stateCode = 'MH') {
+    currentStateCode = stateCode;
+    
+    fetch('/api/calculate-checkout-totals', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({state_code: stateCode})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            currentTotals = data.totals;
+            updatePriceDisplay(data.totals, data.tax_breakdown);
+            
+            // Show applied promocode if any
+            if (data.applied_promocode) {
+                showAppliedPromocode(data.applied_promocode);
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading totals:', error);
+    });
+}
+
+// Update price display
+function updatePriceDisplay(totals, taxBreakdown) {
+    document.getElementById('subtotalAmount').textContent = `₹${totals.subtotal}`;
+    document.getElementById('taxAmount').textContent = `₹${totals.tax_amount}`;
+    document.getElementById('totalAmount').textContent = `₹${totals.total_amount}`;
+    
+    // Update shipping
+    const shippingEl = document.getElementById('shippingAmount');
+    if (totals.shipping_amount === 0) {
+        shippingEl.textContent = 'FREE';
+        shippingEl.className = 'text-success';
+    } else {
+        shippingEl.textContent = `₹${totals.shipping_amount}`;
+        shippingEl.className = '';
+    }
+    
+    // Update discount
+    const discountRow = document.getElementById('discountRow');
+    if (totals.discount_amount > 0) {
+        discountRow.style.display = 'flex';
+        document.getElementById('discountAmount').textContent = `-₹${totals.discount_amount}`;
+    } else {
+        discountRow.style.display = 'none';
+    }
+    
+    // Update tax breakdown
+    updateTaxBreakdown(taxBreakdown);
+}
+
+// Update tax breakdown display
+function updateTaxBreakdown(taxBreakdown) {
+    const taxBreakdownEl = document.getElementById('taxBreakdown');
+    let html = '';
+    
+    if (taxBreakdown.total_cgst > 0) {
+        html = `
+            <div class="d-flex justify-content-between small text-muted">
+                <span>CGST</span>
+                <span>₹${taxBreakdown.total_cgst.toFixed(2)}</span>
+            </div>
+            <div class="d-flex justify-content-between small text-muted">
+                <span>SGST</span>
+                <span>₹${taxBreakdown.total_sgst.toFixed(2)}</span>
+            </div>
+        `;
+    } else {
+        html = `
+            <div class="d-flex justify-content-between small text-muted">
+                <span>IGST</span>
+                <span>₹${taxBreakdown.total_igst.toFixed(2)}</span>
+            </div>
+        `;
+    }
+    
+    taxBreakdownEl.innerHTML = html;
+}
+
+// Apply promocode
+function applyPromocode() {
+    const code = document.getElementById('promocodeInput').value.trim();
+    const messageDiv = document.getElementById('promocodeMessage');
+    const applyBtn = document.getElementById('applyPromoBtn');
+    
+    if (!code) {
+        showPromoMessage('Please enter a promocode', 'danger');
+        return;
+    }
+    
+    // Show loading
+    applyBtn.disabled = true;
+    applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
+    
+    fetch('/api/apply-checkout-promocode', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            code: code,
+            state_code: currentStateCode
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            currentTotals = data.totals;
+            updatePriceDisplay(data.totals, data.tax_breakdown);
+            showAppliedPromocode(data.applied_promocode);
+            showPromoMessage(data.message, 'success');
+            
+            // Clear input
+            document.getElementById('promocodeInput').value = '';
+        } else {
+            showPromoMessage(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error applying promocode:', error);
+        showPromoMessage('Error applying promocode', 'danger');
+    })
+    .finally(() => {
+        // Restore button
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = 'Apply';
+    });
+}
+
+// Remove promocode
+function removePromocode() {
+    fetch('/api/remove-promocode', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({state_code: currentStateCode})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            currentTotals = data.totals;
+            updatePriceDisplay(data.totals, data.tax_breakdown);
+            hideAppliedPromocode();
+            showPromoMessage(data.message, 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error removing promocode:', error);
+    });
+}
+
+// Show promocode message
+function showPromoMessage(message, type) {
+    const messageDiv = document.getElementById('promocodeMessage');
+    messageDiv.innerHTML = `<div class="alert alert-${type} alert-sm mt-2">${message}</div>`;
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        messageDiv.innerHTML = '';
+    }, 5000);
+}
+
+// Show applied promocode
+function showAppliedPromocode(promocode) {
+    document.getElementById('promocodeSection').style.display = 'none';
+    document.getElementById('appliedPromocode').style.display = 'block';
+    document.getElementById('appliedCode').textContent = promocode.code;
+    
+    let description = '';
+    if (promocode.discount_type === 'percentage') {
+        description = `${promocode.discount_value}% discount`;
+    } else {
+        description = `₹${promocode.discount_value} discount`;
+    }
+    document.getElementById('promoDescription').textContent = description;
+    document.getElementById('discountCode').textContent = `(${promocode.code})`;
+}
+
+// Hide applied promocode
+function hideAppliedPromocode() {
+    document.getElementById('promocodeSection').style.display = 'block';
+    document.getElementById('appliedPromocode').style.display = 'none';
+    document.getElementById('promocodeInput').value = '';
+}
+
+// Update tax calculation from selected address
+function updateTaxCalculationFromAddress() {
+    const selectedAddress = document.querySelector('input[name="address"]:checked');
+    if (selectedAddress) {
+        // Extract state from address - you might need to modify this based on your address display
+        // For now, reload with current state
+        loadCheckoutTotals(currentStateCode);
+    }
+}
+
+// Fixed place order function
+function placeOrder() {
+    const form = document.getElementById('checkoutForm');
+    const selectedAddress = document.querySelector('input[name="address"]:checked');
+    const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+    const orderNotes = document.getElementById('orderNotes').value;
+    const placeOrderBtn = document.getElementById('placeOrderBtn');
+    
+    // Validation
+    if (!selectedAddress) {
+        alert('Please select a delivery address');
+        return;
+    }
+    
+    if (!selectedPayment) {
+        alert('Please select a payment method');
+        return;
+    }
+    
+    // Check wallet balance if wallet payment selected
+    if (selectedPayment.value === 'wallet' && currentTotals) {
+        fetch('/api/wallet/balance')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.balance < currentTotals.total_amount) {
+                alert(`Insufficient wallet balance. You have ₹${data.balance.toFixed(2)} but need ₹${currentTotals.total_amount}`);
+                document.getElementById('cod').checked = true;
+                return;
+            }
+            // Proceed with order if wallet has sufficient balance
+            proceedWithOrder();
+        });
+    } else {
+        proceedWithOrder();
+    }
+    
+    function proceedWithOrder() {
+        // Disable button and show loading
+        placeOrderBtn.disabled = true;
+        placeOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Order...';
+        
+        // Place order
+        fetch('/api/place-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                address_id: selectedAddress.value,
+                payment_method: selectedPayment.value,
+                notes: orderNotes
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                alert('Order placed successfully!');
+                
+                // Clear applied promocode from session
+                if (document.getElementById('appliedPromocode').style.display !== 'none') {
+                    hideAppliedPromocode();
+                }
+                
+                // Redirect to success page
+                window.location.href = `/order-success/${data.order_id}`;
+            } else {
+                alert(data.message || 'Error placing order');
+                
+                // Restore button
+                placeOrderBtn.disabled = false;
+                placeOrderBtn.innerHTML = '<i class="fas fa-shopping-bag me-2"></i>Place Order';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error placing order. Please try again.');
+            
+            // Restore button
+            placeOrderBtn.disabled = false;
+            placeOrderBtn.innerHTML = '<i class="fas fa-shopping-bag me-2"></i>Place Order';
+        });
+    }
+}
+
+// Handle payment method selection
+document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        if (this.value === 'wallet') {
+            // Check wallet balance
+            fetch('/api/wallet/balance')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && currentTotals && data.balance < currentTotals.total_amount) {
+                    alert(`Insufficient wallet balance. You have ₹${data.balance.toFixed(2)} but need ₹${currentTotals.total_amount.toFixed(2)}`);
+                    document.getElementById('cod').checked = true;
+                }
+            });
+        }
+    });
+});
+
+// Enter key support for promocode
+document.getElementById('promocodeInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        applyPromocode();
+    }
+});
+// Load wallet balance
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/wallet/balance')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('walletBalance').textContent = `Balance: ₹${data.balance}`;
+        }
+    })
+    .catch(error => {
+        document.getElementById('walletBalance').textContent = 'Balance: ₹0';
+    });
+});
+
+// Update the placeOrder function in checkout.html
+function placeOrder() {
+    const form = document.getElementById('checkoutForm');
+    const selectedAddress = document.querySelector('input[name="address"]:checked');
+    const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+    const orderNotes = document.getElementById('orderNotes').value;
+    const placeOrderBtn = document.getElementById('placeOrderBtn');
+    
+    // Validation
+    if (!selectedAddress) {
+        alert('Please select a delivery address');
+        return;
+    }
+    
+    if (!selectedPayment) {
+        alert('Please select a payment method');
+        return;
+    }
+    
+    // Disable button and show loading
+    placeOrderBtn.disabled = true;
+    placeOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Order...';
+    
+    // Place order
+    fetch('/api/place-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            address_id: selectedAddress.value,
+            payment_method: selectedPayment.value,
+            notes: orderNotes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            alert('Order placed successfully!');
+            
+            // Redirect to success page
+            window.location.href = `/order-success/${data.order_id}`;
+        } else {
+            alert(data.message || 'Error placing order');
+            
+            // Restore button
+            placeOrderBtn.disabled = false;
+            placeOrderBtn.innerHTML = '<i class="fas fa-shopping-bag me-2"></i>Place Order';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error placing order. Please try again.');
+        
+        // Restore button
+        placeOrderBtn.disabled = false;
+        placeOrderBtn.innerHTML = '<i class="fas fa-shopping-bag me-2"></i>Place Order';
+    });
+}
+// Add to checkout.html
+function updateTaxCalculation() {
+    const stateSelect = document.querySelector('select[name="state_code"]');
+    const selectedState = stateSelect.value;
+    
+    if (selectedState) {
+        fetch('/api/calculate-tax', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({state_code: selectedState})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateTaxDisplay(data.tax_breakdown);
+            }
+        });
+    }
+}
+
+function updateTaxDisplay(taxData) {
+    // Update tax breakdown in UI
+    document.getElementById('tax-amount').textContent = `₹${taxData.total_tax}`;
+    document.getElementById('total-amount').textContent = `₹${taxData.grand_total}`;
+    
+    // Update tax breakdown details
+    const taxBreakdown = document.getElementById('tax-breakdown');
+    if (taxData.total_cgst > 0) {
+        taxBreakdown.innerHTML = `
+            <div>CGST: ₹${taxData.total_cgst}</div>
+            <div>SGST: ₹${taxData.total_sgst}</div>
+        `;
+    } else {
+        taxBreakdown.innerHTML = `<div>IGST: ₹${taxData.total_igst}</div>`;
+    }
+}
+// Handle payment method selection
+document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        if (this.value === 'wallet') {
+            // Check wallet balance
+            fetch('/api/wallet/balance')
+            .then(response => response.json())
+            .then(data => {
+                const totalAmount = {{ total_amount }};
+                if (data.success && data.balance < totalAmount) {
+                    alert(`Insufficient wallet balance. You have ₹${data.balance} but need ₹${totalAmount}`);
+                    document.getElementById('cod').checked = true;
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
